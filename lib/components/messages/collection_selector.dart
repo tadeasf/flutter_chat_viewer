@@ -183,7 +183,7 @@ class CollectionSelectorState extends State<CollectionSelector> {
                   ),
                 ),
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
+                  height: MediaQuery.of(context).size.height * 0.5,
                   child: ListView.builder(
                     controller: _scrollController,
                     itemCount: filteredCollections.length + 1,

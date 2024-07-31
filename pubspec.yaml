@@ -1,4 +1,4 @@
-name: flutter_chat_viewer
+name: meta_chat_viewer
 description: "A Flutter project for viewing and managing chat messages. Includes features for searching messages, handling photos, and managing collections."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
@@ -31,7 +31,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   permission_handler: ^11.3.1
   cached_network_image: ^3.0.0
-  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

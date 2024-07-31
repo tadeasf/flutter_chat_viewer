@@ -12,6 +12,7 @@ import '../api_db/database_manager.dart';
 import '../search/navigate_search.dart';
 import '../app_drawer.dart';
 import 'collection_selector.dart';
+import '../navbar.dart';
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -187,148 +188,6 @@ class MessageSelectorState extends State<MessageSelector> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: <Widget>[
-          SliverAppBar(
-            floating: true,
-            pinned: true,
-            snap: false,
-            title: const Text('Chat Viewer'),
-            actions: [
-              IconButton(
-                icon: Icon(isCollectionSelectorVisible
-                    ? Icons.view_list
-                    : Icons.view_list_outlined),
-                onPressed: toggleCollectionSelector,
-              ),
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                  setState(() {
-                    isSearchVisible = !isSearchVisible;
-                    if (!isSearchVisible) {
-                      searchController.clear();
-                      searchResults.clear();
-                      currentSearchIndex = -1;
-                      isSearchActive = false;
-                    }
-                  });
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.storage),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Database Management'),
-                        content: DatabaseManager(
-                            refreshCollections: refreshCollections),
-                        actions: [
-                          TextButton(
-                            child: const Text('Close'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withOpacity(0.7),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Column(
-              children: <Widget>[
-                if (isCollectionSelectorVisible || selectedCollection == null)
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: CollectionSelector(
-                      selectedCollection: selectedCollection,
-                      initialCollections: filteredCollections,
-                      onCollectionChanged: _changeCollection,
-                      maxMessageCount: maxMessageCount,
-                    ),
-                  ),
-                if (isSearchVisible) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: searchController,
-                            decoration: const InputDecoration(
-                              labelText: 'Search messages',
-                              suffixIcon: Icon(Icons.search),
-                            ),
-                            onChanged: _performSearch,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.arrow_upward),
-                          onPressed: () => _navigateSearch(-1),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.arrow_downward),
-                          onPressed: () => _navigateSearch(1),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                        '${searchResults.isNotEmpty ? currentSearchIndex + 1 : 0}/${searchResults.length} results'),
-                  ),
-                ],
-                if (isPhotoAvailable && selectedCollection != null)
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Image.network(
-                      'https://secondary.dev.tadeasfort.com/serve/photo/${Uri.encodeComponent(selectedCollection!)}',
-                      height: 100,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Text('Failed to load image');
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          SliverFillRemaining(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : MessageList(
-                    messages: messages,
-                    searchResults: searchResults,
-                    currentSearchIndex: currentSearchIndex,
-                    itemScrollController: itemScrollController,
-                    itemPositionsListener: itemPositionsListener,
-                    isSearchActive: isSearchVisible,
-                    selectedCollectionName: selectedCollection ?? '',
-                    profilePhotoUrl: profilePhotoUrl,
-                  ),
-          ),
-        ],
-      ),
       drawer: AppDrawer(
         selectedCollection: selectedCollection,
         isPhotoAvailable: isPhotoAvailable,
@@ -342,6 +201,120 @@ class MessageSelectorState extends State<MessageSelector> {
         setThemeMode: widget.setThemeMode,
         themeMode: widget.themeMode,
         picker: picker,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Chat Viewer',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : MessageList(
+                    messages: messages,
+                    searchResults: searchResults,
+                    currentSearchIndex: currentSearchIndex,
+                    itemScrollController: itemScrollController,
+                    itemPositionsListener: itemPositionsListener,
+                    isSearchActive: isSearchVisible,
+                    selectedCollectionName: selectedCollection ?? '',
+                    profilePhotoUrl: profilePhotoUrl,
+                  ),
+          ),
+          if (isCollectionSelectorVisible || selectedCollection == null)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: CollectionSelector(
+                selectedCollection: selectedCollection,
+                initialCollections: filteredCollections,
+                onCollectionChanged: _changeCollection,
+                maxMessageCount: maxMessageCount,
+              ),
+            ),
+          if (isSearchVisible) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: searchController,
+                      decoration: const InputDecoration(
+                        labelText: 'Search messages',
+                        suffixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: _performSearch,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_upward),
+                    onPressed: () => _navigateSearch(-1),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_downward),
+                    onPressed: () => _navigateSearch(1),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                  '${searchResults.isNotEmpty ? currentSearchIndex + 1 : 0}/${searchResults.length} results'),
+            ),
+          ],
+          if (isPhotoAvailable && selectedCollection != null)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Image.network(
+                'https://secondary.dev.tadeasfort.com/serve/photo/${Uri.encodeComponent(selectedCollection!)}',
+                height: 100,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Text('Failed to load image');
+                },
+              ),
+            ),
+        ],
+      ),
+      bottomNavigationBar: Navbar(
+        title: 'Chat Viewer',
+        onSearchPressed: () {
+          setState(() {
+            isSearchVisible = !isSearchVisible;
+            if (!isSearchVisible) {
+              searchController.clear();
+              searchResults.clear();
+              currentSearchIndex = -1;
+              isSearchActive = false;
+            }
+          });
+        },
+        onDatabasePressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Database Management'),
+                content:
+                    DatabaseManager(refreshCollections: refreshCollections),
+                actions: [
+                  TextButton(
+                    child: const Text('Close'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        onCollectionSelectorPressed: toggleCollectionSelector,
+        isCollectionSelectorVisible: isCollectionSelectorVisible,
       ),
     );
   }
