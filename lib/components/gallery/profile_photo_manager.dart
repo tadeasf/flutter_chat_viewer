@@ -1,4 +1,5 @@
-import 'api_service.dart';
+import '../api_db/api_service.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 class ProfilePhotoManager {
   static final Map<String, String?> _profilePhotoUrls = {};
@@ -9,7 +10,9 @@ class ProfilePhotoManager {
         final url = ApiService.getProfilePhotoUrl(collectionName);
         _profilePhotoUrls[collectionName] = url;
       } catch (e) {
-        print('Error fetching profile photo URL: $e');
+        if (kDebugMode) {
+          print('Error fetching profile photo URL: $e');
+        }
         _profilePhotoUrls[collectionName] = null;
       }
     }

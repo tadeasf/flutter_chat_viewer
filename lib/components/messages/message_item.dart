@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../components/api_service.dart';
+import '../api_db/api_service.dart';
 import 'message_profile_photo.dart';
-import 'photo_view_screen.dart';
+import '../gallery/photo_view_screen.dart';
 
 class MessageItem extends StatefulWidget {
   final Map<String, dynamic> message;
@@ -21,10 +21,10 @@ class MessageItem extends StatefulWidget {
   });
 
   @override
-  _MessageItemState createState() => _MessageItemState();
+  MessageItemState createState() => MessageItemState();
 }
 
-class _MessageItemState extends State<MessageItem> {
+class MessageItemState extends State<MessageItem> {
   bool _isExpanded = false;
 
   @override

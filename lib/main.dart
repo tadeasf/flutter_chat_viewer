@@ -1,11 +1,10 @@
-// TODO: in the gallery when photo is enlarged add save function
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'components/message_selector.dart';
-import 'components/theme_manager.dart';
+import 'components/messages/message_selector.dart';
+import 'components/ui/theme_manager.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +14,7 @@ class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
@@ -65,7 +64,7 @@ class ProfilePhoto extends StatefulWidget {
   });
 
   @override
-  _ProfilePhotoState createState() => _ProfilePhotoState();
+  State<ProfilePhoto> createState() => _ProfilePhotoState();
 }
 
 class _ProfilePhotoState extends State<ProfilePhoto> {
@@ -76,14 +75,20 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
   @override
   void initState() {
     super.initState();
-    print('Collection Name: ${widget.collectionName}'); // Debug print
+    if (kDebugMode) {
+      if (kDebugMode) {
+        print('Collection Name: ${widget.collectionName}');
+      }
+    } // Debug print
     _loadCachedPhoto();
   }
 
   Future<void> _loadCachedPhoto() async {
     final prefs = await SharedPreferences.getInstance();
     final cachedUrl = prefs.getString('profile_photo_${widget.collectionName}');
-    print('Cached URL: $cachedUrl');
+    if (kDebugMode) {
+      print('Cached URL: $cachedUrl');
+    }
     if (cachedUrl != null) {
       setState(() {
         _imageUrl = cachedUrl;
@@ -98,12 +103,19 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
     try {
       final requestUrl =
           'https://secondary.dev.tadeasfort.com/messages/${widget.collectionName}/photo';
-      print('Request URL: $requestUrl');
+      if (kDebugMode) {
+        if (kDebugMode) {}
+        print('Request URL: $requestUrl');
+      }
       final response = await http.get(
         Uri.parse(requestUrl),
       );
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      if (kDebugMode) {
+        print('Response status: ${response.statusCode}');
+      }
+      if (kDebugMode) {
+        print('Response body: ${response.body}');
+      }
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['isPhotoAvailable'] == true && data['photoUrl'] != null) {
@@ -149,7 +161,7 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
           SizedBox(
             width: widget.size,
             height: widget.size,
-            child: CircularProgressIndicator(),
+            child: const CircularProgressIndicator(),
           )
         else if (_isError || _imageUrl == null)
           Icon(
@@ -197,13 +209,13 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
             child: Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.message),
+                  icon: const Icon(Icons.message),
                   onPressed: () {
                     // Handle message button press
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.call),
+                  icon: const Icon(Icons.call),
                   onPressed: () {
                     // Handle call button press
                   },

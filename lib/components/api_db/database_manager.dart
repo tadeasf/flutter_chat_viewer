@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'load_collections.dart';
 
 class DatabaseManager extends StatefulWidget {
@@ -8,10 +9,10 @@ class DatabaseManager extends StatefulWidget {
   const DatabaseManager({super.key, required this.refreshCollections});
 
   @override
-  _DatabaseManagerState createState() => _DatabaseManagerState();
+  DatabaseManagerState createState() => DatabaseManagerState();
 }
 
-class _DatabaseManagerState extends State<DatabaseManager> {
+class DatabaseManagerState extends State<DatabaseManager> {
   String currentDb = '';
   bool isLoading = false;
 
@@ -33,7 +34,9 @@ class _DatabaseManagerState extends State<DatabaseManager> {
         throw Exception('Failed to load current database');
       }
     } catch (e) {
-      print('Error fetching current database: $e');
+      if (kDebugMode) {
+        print('Error fetching current database: $e');
+      }
     }
   }
 
@@ -45,7 +48,8 @@ class _DatabaseManagerState extends State<DatabaseManager> {
       final response = await http
           .get(Uri.parse('https://secondary.dev.tadeasfort.com/switch_db'));
       if (response.statusCode == 200) {
-        await Future.delayed(Duration(seconds: 30)); // Wait for 30 seconds
+        await Future.delayed(
+            const Duration(seconds: 30)); // Wait for 30 seconds
         await fetchCurrentDb();
         await loadCollections((collections) {
           // Update collections in the parent widget
@@ -55,7 +59,9 @@ class _DatabaseManagerState extends State<DatabaseManager> {
         throw Exception('Failed to switch database');
       }
     } catch (e) {
-      print('Error switching database: $e');
+      if (kDebugMode) {
+        print('Error switching database: $e');
+      }
     } finally {
       setState(() {
         isLoading = false;
@@ -68,11 +74,11 @@ class _DatabaseManagerState extends State<DatabaseManager> {
     return Row(
       children: [
         Text('Current DB: $currentDb'),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         ElevatedButton(
           onPressed: isLoading ? null : switchDbAndFetch,
           child: isLoading
-              ? SizedBox(
+              ? const SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
@@ -80,7 +86,7 @@ class _DatabaseManagerState extends State<DatabaseManager> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : Text('Switch DB'),
+              : const Text('Switch DB'),
         ),
       ],
     );

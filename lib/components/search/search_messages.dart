@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:diacritic/diacritic.dart';
 
 void searchMessages(
@@ -48,7 +49,9 @@ void searchMessages(
         } else {
           updateCurrentSearchIndex(-1);
           updateIsSearchActive(false);
-          print("No messages with the given content found.");
+          if (kDebugMode) {
+            print("No messages with the given content found.");
+          }
         }
       });
     }
@@ -72,10 +75,10 @@ Widget buildSearchBar(
           onChanged: onChanged,
           decoration: InputDecoration(
             hintText: 'Search messages...',
-            prefixIcon: Icon(Icons.search),
+            prefixIcon: const Icon(Icons.search),
             suffixIcon: isSearchActive
                 ? IconButton(
-                    icon: Icon(Icons.clear),
+                    icon: const Icon(Icons.clear),
                     onPressed: onClear,
                   )
                 : null,
