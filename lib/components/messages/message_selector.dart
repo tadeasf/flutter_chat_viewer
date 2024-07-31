@@ -11,7 +11,6 @@ import '../profile_photo/profile_photo_manager.dart';
 import '../api_db/database_manager.dart';
 import '../search/navigate_search.dart';
 import '../app_drawer.dart';
-import '../navbar.dart';
 import 'collection_selector.dart';
 
 class MessageSelector extends StatefulWidget {
@@ -188,112 +187,133 @@ class MessageSelectorState extends State<MessageSelector> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Navbar(
-        title: 'Chat Viewer',
-        onSearchPressed: () {
-          setState(() {
-            isSearchVisible = !isSearchVisible;
-            if (!isSearchVisible) {
-              searchController.clear();
-              searchResults.clear();
-              currentSearchIndex = -1;
-              isSearchActive = false;
-            }
-          });
-        },
-        onDatabasePressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Database Management'),
-                content:
-                    DatabaseManager(refreshCollections: refreshCollections),
-                actions: [
-                  TextButton(
-                    child: const Text('Close'),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              );
-            },
-          );
-        },
-        onCollectionSelectorPressed: toggleCollectionSelector,
-        isCollectionSelectorVisible: isCollectionSelectorVisible,
-      ),
-      drawer: AppDrawer(
-        selectedCollection: selectedCollection,
-        isPhotoAvailable: isPhotoAvailable,
-        isProfilePhotoVisible: _isProfilePhotoVisible,
-        fromDate: fromDate,
-        toDate: toDate,
-        profilePhotoUrl: profilePhotoUrl,
-        refreshCollections: refreshCollections,
-        setState: setState,
-        fetchMessages: fetchMessages,
-        setThemeMode: widget.setThemeMode,
-        themeMode: widget.themeMode,
-        picker: picker,
-      ),
-      body: Column(
-        children: <Widget>[
-          if (isCollectionSelectorVisible || selectedCollection == null)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: CollectionSelector(
-                selectedCollection: selectedCollection,
-                initialCollections: filteredCollections,
-                onCollectionChanged: _changeCollection,
-                maxMessageCount: maxMessageCount,
+      body: CustomScrollView(
+        slivers: <Widget>[
+          SliverAppBar(
+            floating: true,
+            pinned: true,
+            snap: false,
+            title: const Text('Chat Viewer'),
+            actions: [
+              IconButton(
+                icon: Icon(isCollectionSelectorVisible
+                    ? Icons.view_list
+                    : Icons.view_list_outlined),
+                onPressed: toggleCollectionSelector,
               ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                if (isSearchVisible) ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: searchController,
-                          decoration: const InputDecoration(
-                            labelText: 'Search messages',
-                            suffixIcon: Icon(Icons.search),
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    isSearchVisible = !isSearchVisible;
+                    if (!isSearchVisible) {
+                      searchController.clear();
+                      searchResults.clear();
+                      currentSearchIndex = -1;
+                      isSearchActive = false;
+                    }
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.storage),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Database Management'),
+                        content: DatabaseManager(
+                            refreshCollections: refreshCollections),
+                        actions: [
+                          TextButton(
+                            child: const Text('Close'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
                           ),
-                          onChanged: _performSearch,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_upward),
-                        onPressed: () => _navigateSearch(-1),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_downward),
-                        onPressed: () => _navigateSearch(1),
-                      ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).primaryColor,
+                      Theme.of(context).primaryColor.withOpacity(0.7),
                     ],
                   ),
-                  Text(
-                      '${searchResults.isNotEmpty ? currentSearchIndex + 1 : 0}/${searchResults.length} results'),
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              children: <Widget>[
+                if (isCollectionSelectorVisible || selectedCollection == null)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: CollectionSelector(
+                      selectedCollection: selectedCollection,
+                      initialCollections: filteredCollections,
+                      onCollectionChanged: _changeCollection,
+                      maxMessageCount: maxMessageCount,
+                    ),
+                  ),
+                if (isSearchVisible) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: searchController,
+                            decoration: const InputDecoration(
+                              labelText: 'Search messages',
+                              suffixIcon: Icon(Icons.search),
+                            ),
+                            onChanged: _performSearch,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_upward),
+                          onPressed: () => _navigateSearch(-1),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_downward),
+                          onPressed: () => _navigateSearch(1),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                        '${searchResults.isNotEmpty ? currentSearchIndex + 1 : 0}/${searchResults.length} results'),
+                  ),
                 ],
-                const SizedBox(height: 20),
                 if (isPhotoAvailable && selectedCollection != null)
-                  Image.network(
-                    'https://secondary.dev.tadeasfort.com/serve/photo/${Uri.encodeComponent(selectedCollection!)}',
-                    height: 100,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Text('Failed to load image');
-                    },
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Image.network(
+                      'https://secondary.dev.tadeasfort.com/serve/photo/${Uri.encodeComponent(selectedCollection!)}',
+                      height: 100,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Text('Failed to load image');
+                      },
+                    ),
                   ),
               ],
             ),
           ),
-          Expanded(
+          SliverFillRemaining(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : MessageList(
@@ -308,6 +328,20 @@ class MessageSelectorState extends State<MessageSelector> {
                   ),
           ),
         ],
+      ),
+      drawer: AppDrawer(
+        selectedCollection: selectedCollection,
+        isPhotoAvailable: isPhotoAvailable,
+        isProfilePhotoVisible: _isProfilePhotoVisible,
+        fromDate: fromDate,
+        toDate: toDate,
+        profilePhotoUrl: profilePhotoUrl,
+        refreshCollections: refreshCollections,
+        setState: setState,
+        fetchMessages: fetchMessages,
+        setThemeMode: widget.setThemeMode,
+        themeMode: widget.themeMode,
+        picker: picker,
       ),
     );
   }
