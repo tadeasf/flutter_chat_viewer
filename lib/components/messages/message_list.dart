@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'message_item.dart';
 import '../ui_utils/custom_scroll_behavior.dart';
@@ -13,6 +12,7 @@ class MessageList extends StatelessWidget {
   final bool isSearchActive;
   final String selectedCollectionName;
   final String? profilePhotoUrl;
+  final bool isCrossCollectionSearch;
 
   const MessageList({
     super.key,
@@ -24,39 +24,38 @@ class MessageList extends StatelessWidget {
     required this.isSearchActive,
     required this.selectedCollectionName,
     required this.profilePhotoUrl,
+    required this.isCrossCollectionSearch,
   });
+
+  Map<String, dynamic> _ensureStringDynamicMap(dynamic item) {
+    if (item is Map<String, dynamic>) {
+      return item;
+    } else if (item is Map) {
+      return Map<String, dynamic>.from(item);
+    }
+    // If it's not a Map at all, return an empty Map
+    return {};
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (isSearchActive) {
-      if (kDebugMode) {
-        print('Search Results: $searchResults');
-      }
-      if (kDebugMode) {
-        print('Current Search Index: $currentSearchIndex');
-      }
-    }
-
     return ScrollConfiguration(
       behavior: CustomScrollBehavior(),
       child: ScrollablePositionedList.builder(
         itemCount: messages.length,
         itemBuilder: (context, index) {
-          final message = messages[index];
+          final message = _ensureStringDynamicMap(messages[index]);
           final isHighlighted = isSearchActive &&
               searchResults.contains(index) &&
               searchResults.indexOf(index) == currentSearchIndex;
-          if (isSearchActive) {
-            if (kDebugMode) {
-              print('Message at index $index is highlighted: $isHighlighted');
-            }
-          }
+
           return MessageItem(
             message: message,
             isAuthor: message['sender_name'] == 'Tadeáš Fořt',
             isHighlighted: isHighlighted,
             selectedCollectionName: selectedCollectionName,
             profilePhotoUrl: profilePhotoUrl,
+            isCrossCollectionSearch: isCrossCollectionSearch,
           );
         },
         itemScrollController: itemScrollController,

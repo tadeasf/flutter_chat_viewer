@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'dart:async';
@@ -55,6 +56,8 @@ class MessageSelectorState extends State<MessageSelector> {
           .reduce((a, b) => a > b ? a : b)
       : 1;
   bool isCollectionSelectorVisible = false;
+  List<dynamic> crossCollectionMessages = [];
+  bool isCrossCollectionSearch = false;
 
   @override
   void initState() {
@@ -185,6 +188,31 @@ class MessageSelectorState extends State<MessageSelector> {
     });
   }
 
+  void _handleCrossCollectionSearch(List<dynamic> searchResults) {
+    setState(() {
+      crossCollectionMessages = searchResults.map((result) {
+        // Ensure all string fields are properly decoded
+        return {
+          ...result,
+          'content': _decodeIfNeeded(result['content']),
+          'sender_name': _decodeIfNeeded(result['sender_name']),
+          'collectionName': _decodeIfNeeded(result['collectionName']),
+          // Add other fields that might need decoding
+        };
+      }).toList();
+      isCrossCollectionSearch = true;
+    });
+  }
+
+  String _decodeIfNeeded(String? text) {
+    if (text == null) return '';
+    try {
+      return utf8.decode(text.runes.toList());
+    } catch (e) {
+      return text; // Return original if decoding fails
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -201,6 +229,7 @@ class MessageSelectorState extends State<MessageSelector> {
         setThemeMode: widget.setThemeMode,
         themeMode: widget.themeMode,
         picker: picker,
+        onCrossCollectionSearch: _handleCrossCollectionSearch,
       ),
       body: Column(
         children: [
@@ -215,7 +244,9 @@ class MessageSelectorState extends State<MessageSelector> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : MessageList(
-                    messages: messages,
+                    messages: isCrossCollectionSearch
+                        ? crossCollectionMessages
+                        : messages,
                     searchResults: searchResults,
                     currentSearchIndex: currentSearchIndex,
                     itemScrollController: itemScrollController,
@@ -223,6 +254,7 @@ class MessageSelectorState extends State<MessageSelector> {
                     isSearchActive: isSearchVisible,
                     selectedCollectionName: selectedCollection ?? '',
                     profilePhotoUrl: profilePhotoUrl,
+                    isCrossCollectionSearch: isCrossCollectionSearch,
                   ),
           ),
           if (isCollectionSelectorVisible || selectedCollection == null)

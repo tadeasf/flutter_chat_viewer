@@ -5,6 +5,7 @@ import './gallery/photo_handler.dart';
 import './ui_utils/date_selector.dart';
 import './ui_utils/theme_manager.dart';
 import './profile_photo/profile_photo.dart';
+import './search/cross_collection_search.dart';
 
 class AppDrawer extends StatelessWidget {
   final String? selectedCollection;
@@ -19,6 +20,7 @@ class AppDrawer extends StatelessWidget {
   final void Function(ThemeMode) setThemeMode;
   final ThemeMode themeMode;
   final ImagePicker picker;
+  final Function(List<dynamic>) onCrossCollectionSearch;
 
   const AppDrawer({
     super.key,
@@ -34,6 +36,7 @@ class AppDrawer extends StatelessWidget {
     required this.setThemeMode,
     required this.themeMode,
     required this.picker,
+    required this.onCrossCollectionSearch,
   });
 
   @override
@@ -120,6 +123,23 @@ class AppDrawer extends StatelessWidget {
                       setState,
                       [],
                       false,
+                    );
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.search),
+                  title: Text('Cross-Collection Search',
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return CrossCollectionSearchDialog(
+                          onSearchResults: onCrossCollectionSearch,
+                        );
+                      },
                     );
                   },
                 ),

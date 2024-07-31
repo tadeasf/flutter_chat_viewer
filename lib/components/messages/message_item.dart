@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../api_db/api_service.dart';
 import 'message_profile_photo.dart';
@@ -10,6 +11,7 @@ class MessageItem extends StatefulWidget {
   final bool isHighlighted;
   final String selectedCollectionName;
   final String? profilePhotoUrl;
+  final bool isCrossCollectionSearch;
 
   const MessageItem({
     super.key,
@@ -17,7 +19,8 @@ class MessageItem extends StatefulWidget {
     required this.isAuthor,
     required this.isHighlighted,
     required this.selectedCollectionName,
-    required this.profilePhotoUrl,
+    this.profilePhotoUrl,
+    required this.isCrossCollectionSearch,
   });
 
   @override
@@ -48,6 +51,16 @@ class MessageItemState extends State<MessageItem> {
   static const Color rosewater = Color(0xFFCC2D55);
   static const Color text = Color(0xFFE5E5EA);
   static const Color subtext1 = Color(0xFF8E8E93);
+
+  String _ensureDecoded(dynamic text) {
+    if (text == null) return '';
+    if (text is! String) return text.toString();
+    try {
+      return utf8.decode(text.runes.toList());
+    } catch (e) {
+      return text;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +111,7 @@ class MessageItemState extends State<MessageItem> {
           children: [
             if (widget.message['content'] != null)
               Text(
-                widget.message['content'],
+                _ensureDecoded(widget.message['content']),
                 style: TextStyle(
                   color: getTextColor(),
                   fontSize: 16,
@@ -145,7 +158,7 @@ class MessageItemState extends State<MessageItem> {
         );
       } else {
         return Text(
-          widget.message['content'] ?? 'No content',
+          _ensureDecoded(widget.message['content'] ?? 'No content'),
           style: TextStyle(
             color: getTextColor(),
             fontSize: 16,
@@ -168,27 +181,38 @@ class MessageItemState extends State<MessageItem> {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            if (!widget.isAuthor)
+            if (!widget.isAuthor || widget.isCrossCollectionSearch)
               Padding(
                 padding: const EdgeInsets.only(left: 8, bottom: 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     MessageProfilePhoto(
-                      collectionName: widget.selectedCollectionName,
+                      collectionName: widget.isCrossCollectionSearch
+                          ? widget.message['collectionName']
+                          : widget.selectedCollectionName,
                       size: 24.0,
                       isOnline: widget.message['is_online'] ?? false,
                       profilePhotoUrl: widget.profilePhotoUrl,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      widget.message['sender_name'] ?? 'Unknown sender',
+                      _ensureDecoded(
+                          widget.message['sender_name'] ?? 'Unknown sender'),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         color: isDarkMode ? subtext1 : Colors.grey[700],
                       ),
                     ),
+                    if (widget.isCrossCollectionSearch)
+                      Text(
+                        ' (${_ensureDecoded(widget.message['collectionName'] ?? 'Unknown collection')})',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDarkMode ? subtext1 : Colors.grey[500],
+                        ),
+                      ),
                   ],
                 ),
               ),
