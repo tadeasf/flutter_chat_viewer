@@ -12,6 +12,7 @@ import 'photo_handler.dart';
 import 'date_selector.dart';
 import 'theme_manager.dart';
 import 'message_list.dart';
+import 'scroll_to_highlighted_message.dart';
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -105,15 +106,25 @@ class _MessageSelectorState extends State<MessageSelector> {
   }
 
   void _scrollToHighlightedMessage() {
-    if (currentSearchIndex >= 0 && currentSearchIndex < searchResults.length) {
-      final int messageIndex = searchResults[currentSearchIndex];
-      itemScrollController.scrollTo(
-        index: messageIndex,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOutCubic,
-        alignment: 0.0, // This will align the item to the top of the viewport
-      );
-    }
+    scrollToHighlightedMessage(
+      currentSearchIndex,
+      searchResults,
+      itemScrollController,
+    );
+  }
+
+  void _navigateSearch(int direction) {
+    navigateSearch(
+      direction,
+      searchResults,
+      currentSearchIndex,
+      (index) {
+        setState(() {
+          currentSearchIndex = index;
+        });
+      },
+      _scrollToHighlightedMessage,
+    );
   }
 
   @override
@@ -259,21 +270,11 @@ class _MessageSelectorState extends State<MessageSelector> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.arrow_upward),
-                        onPressed: () => navigateSearch(
-                            -1,
-                            searchResults,
-                            currentSearchIndex,
-                            setState,
-                            _scrollToHighlightedMessage),
+                        onPressed: () => _navigateSearch(-1),
                       ),
                       IconButton(
                         icon: const Icon(Icons.arrow_downward),
-                        onPressed: () => navigateSearch(
-                            1,
-                            searchResults,
-                            currentSearchIndex,
-                            setState,
-                            _scrollToHighlightedMessage),
+                        onPressed: () => _navigateSearch(1),
                       ),
                     ],
                   ),

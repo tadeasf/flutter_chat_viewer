@@ -27,11 +27,12 @@ class MessageList extends StatelessWidget {
         itemCount: messages.length,
         itemBuilder: (context, index) {
           final message = messages[index];
+          final isHighlighted =
+              searchResults.contains(index) && index == currentSearchIndex;
           return MessageItem(
             message: message,
             isAuthor: message['sender_name'] == 'Tadeáš Fořt',
-            isHighlighted:
-                searchResults.contains(index) && index == currentSearchIndex,
+            isHighlighted: isHighlighted,
           );
         },
         itemScrollController: itemScrollController,

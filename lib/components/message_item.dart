@@ -22,7 +22,7 @@ class MessageItem extends StatelessWidget {
 
     Color getBubbleColor() {
       if (isHighlighted) {
-        return isDarkMode ? Colors.cyan[700]! : Colors.cyan[300]!;
+        return isDarkMode ? Colors.yellow[700]! : Colors.yellow[300]!;
       }
       if (isInstagram) {
         return isAuthor
@@ -108,6 +108,12 @@ class MessageItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: getBubbleColor(),
           borderRadius: BorderRadius.circular(12),
+          border: isHighlighted
+              ? Border.all(
+                  color: isDarkMode ? Colors.yellow : Colors.orange,
+                  width: 2,
+                )
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
