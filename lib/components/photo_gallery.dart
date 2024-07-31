@@ -1,7 +1,7 @@
 // components/photo_gallery.dart
 
 import 'package:flutter/material.dart';
-import 'photo_view_screen.dart'; // Ensure this import is correct
+import 'photo_view_screen.dart';
 
 class PhotoGallery extends StatelessWidget {
   final List<dynamic> photos;
@@ -27,8 +27,9 @@ class PhotoGallery extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      PhotoViewScreen(imageUrl: photos[index]),
+                  builder: (context) => PhotoViewScreen(
+                    imageUrl: photos[index],
+                  ),
                 ),
               );
             },
