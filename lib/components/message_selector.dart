@@ -14,6 +14,7 @@ import 'theme_manager.dart';
 import 'message_list.dart';
 import 'scroll_to_highlighted_message.dart';
 import 'profile_photo.dart'; // Import ProfilePhoto
+import 'profile_photo_manager.dart'; // Add this import
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -48,6 +49,8 @@ class _MessageSelectorState extends State<MessageSelector> {
   final ScrollController _scrollController = ScrollController();
   Timer? _debounce;
   bool isSearchActive = false; // Added this flag
+  String? profilePhotoUrl; // Add this property
+  bool _isProfilePhotoVisible = true; // Add this property
 
   @override
   void initState() {
@@ -137,7 +140,16 @@ class _MessageSelectorState extends State<MessageSelector> {
       await PhotoHandler.checkPhotoAvailability(selectedCollection, setState);
       await fetchMessages(selectedCollection, fromDate, toDate, setState,
           setLoading, setMessages);
+      // Fetch and store the profile photo URL
+      profilePhotoUrl =
+          await ProfilePhotoManager.getProfilePhotoUrl(selectedCollection!);
     }
+  }
+
+  void _toggleProfilePhotoVisibility() {
+    setState(() {
+      _isProfilePhotoVisible = !_isProfilePhotoVisible;
+    });
   }
 
   @override
@@ -155,10 +167,19 @@ class _MessageSelectorState extends State<MessageSelector> {
                   searchController.clear();
                   searchResults.clear();
                   currentSearchIndex = -1;
-                  isSearchActive = false; // Set to false when search is closed
+                  isSearchActive = false;
                 }
               });
             },
+          ),
+          IconButton(
+            icon: Icon(_isProfilePhotoVisible
+                ? Icons.visibility_off
+                : Icons.visibility),
+            onPressed: _toggleProfilePhotoVisibility,
+            tooltip: _isProfilePhotoVisible
+                ? 'Hide Profile Photo'
+                : 'Show Profile Photo',
           ),
         ],
       ),
@@ -300,7 +321,7 @@ class _MessageSelectorState extends State<MessageSelector> {
               ],
             ),
           ),
-          if (selectedCollection != null)
+          if (_isProfilePhotoVisible && selectedCollection != null)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -308,6 +329,7 @@ class _MessageSelectorState extends State<MessageSelector> {
                   collectionName: selectedCollection!,
                   size: 60.0,
                   isOnline: true,
+                  profilePhotoUrl: profilePhotoUrl,
                 ),
                 IconButton(
                   icon:
@@ -334,6 +356,8 @@ class _MessageSelectorState extends State<MessageSelector> {
                     isSearchActive: isSearchVisible,
                     selectedCollectionName:
                         selectedCollection ?? '', // Add this line
+                    profilePhotoUrl:
+                        profilePhotoUrl, // Pass the profile photo URL
                   ),
           ),
         ],

@@ -11,6 +11,7 @@ class MessageList extends StatelessWidget {
   final ItemPositionsListener itemPositionsListener;
   final bool isSearchActive;
   final String selectedCollectionName;
+  final String? profilePhotoUrl;
 
   const MessageList({
     super.key,
@@ -21,6 +22,7 @@ class MessageList extends StatelessWidget {
     required this.itemPositionsListener,
     required this.isSearchActive,
     required this.selectedCollectionName,
+    required this.profilePhotoUrl,
   });
 
   @override
@@ -47,6 +49,7 @@ class MessageList extends StatelessWidget {
             isAuthor: message['sender_name'] == 'Tadeáš Fořt',
             isHighlighted: isHighlighted,
             selectedCollectionName: selectedCollectionName,
+            profilePhotoUrl: profilePhotoUrl,
           );
         },
         itemScrollController: itemScrollController,

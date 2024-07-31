@@ -52,12 +52,14 @@ class ProfilePhoto extends StatefulWidget {
   final String collectionName;
   final double size;
   final bool isOnline;
+  final bool showButtons;
 
   const ProfilePhoto({
     super.key,
     required this.collectionName,
     this.size = 50.0,
     this.isOnline = false,
+    this.showButtons = false,
   });
 
   @override
@@ -184,6 +186,27 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
                   width: 2.0,
                 ),
               ),
+            ),
+          ),
+        if (widget.showButtons)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.message),
+                  onPressed: () {
+                    // Handle message button press
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.call),
+                  onPressed: () {
+                    // Handle call button press
+                  },
+                ),
+              ],
             ),
           ),
       ],

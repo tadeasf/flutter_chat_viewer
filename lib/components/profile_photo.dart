@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'api_service.dart';
 import 'photo_handler.dart';
 import 'package:image_picker/image_picker.dart';
+import 'profile_photo_manager.dart';
 
 class ProfilePhoto extends StatefulWidget {
   final String collectionName;
   final double size;
   final bool isOnline;
   final bool showButtons;
+  final String? profilePhotoUrl;
 
   const ProfilePhoto({
     super.key,
@@ -16,6 +16,7 @@ class ProfilePhoto extends StatefulWidget {
     this.size = 50.0,
     this.isOnline = false,
     this.showButtons = true,
+    this.profilePhotoUrl,
   });
 
   @override
@@ -35,35 +36,29 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
   }
 
   Future<void> _fetchProfilePhoto() async {
-    try {
-      final requestUrl = ApiService.getProfilePhotoUrl(widget.collectionName);
-      print('Fetching profile photo from: $requestUrl'); // Debug print
-      final response = await http.get(Uri.parse(requestUrl));
-      if (response.statusCode == 200) {
+    if (widget.profilePhotoUrl != null) {
+      setState(() {
+        _imageUrl = widget.profilePhotoUrl;
+        _isLoading = false;
+      });
+    } else {
+      try {
+        final url =
+            await ProfilePhotoManager.getProfilePhotoUrl(widget.collectionName);
         if (mounted) {
           setState(() {
-            _imageUrl = requestUrl;
+            _imageUrl = url;
             _isLoading = false;
           });
-          print('Profile photo fetched successfully'); // Debug print
         }
-      } else {
+      } catch (e) {
+        print('Error fetching profile photo: $e');
         if (mounted) {
           setState(() {
             _isError = true;
             _isLoading = false;
           });
-          print(
-              'Error fetching profile photo: ${response.statusCode}'); // Debug print
         }
-      }
-    } catch (e) {
-      print('Error fetching profile photo: $e');
-      if (mounted) {
-        setState(() {
-          _isError = true;
-          _isLoading = false;
-        });
       }
     }
   }

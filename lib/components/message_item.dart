@@ -9,6 +9,7 @@ class MessageItem extends StatefulWidget {
   final bool isAuthor;
   final bool isHighlighted;
   final String selectedCollectionName;
+  final String? profilePhotoUrl;
 
   const MessageItem({
     super.key,
@@ -16,6 +17,7 @@ class MessageItem extends StatefulWidget {
     required this.isAuthor,
     required this.isHighlighted,
     required this.selectedCollectionName,
+    required this.profilePhotoUrl,
   });
 
   @override
@@ -144,12 +146,12 @@ class _MessageItemState extends State<MessageItem> {
             children: [
               Row(
                 children: [
-                  if (!widget
-                      .isAuthor) // Only show profile photo for non-authors
+                  if (!widget.isAuthor)
                     MessageProfilePhoto(
                       collectionName: widget.selectedCollectionName,
                       size: 40.0,
                       isOnline: widget.message['is_online'] ?? false,
+                      profilePhotoUrl: widget.profilePhotoUrl,
                     ),
                   const SizedBox(width: 8),
                   Text(
