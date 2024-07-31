@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'photo_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_photo_manager.dart';
@@ -20,10 +21,10 @@ class ProfilePhoto extends StatefulWidget {
   });
 
   @override
-  _ProfilePhotoState createState() => _ProfilePhotoState();
+  ProfilePhotoState createState() => ProfilePhotoState();
 }
 
-class _ProfilePhotoState extends State<ProfilePhoto> {
+class ProfilePhotoState extends State<ProfilePhoto> {
   String? _imageUrl;
   bool _isLoading = true;
   bool _isError = false;
@@ -52,7 +53,9 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
           });
         }
       } catch (e) {
-        print('Error fetching profile photo: $e');
+        if (kDebugMode) {
+          print('Error fetching profile photo: $e');
+        }
         if (mounted) {
           setState(() {
             _isError = true;
@@ -118,7 +121,7 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
                     shape: BoxShape.circle,
                     color: Colors.grey[300],
                   ),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: const Center(child: CircularProgressIndicator()),
                 )
               else if (_isError || _imageUrl == null)
                 Icon(
@@ -135,10 +138,12 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     },
                     errorBuilder: (context, error, stackTrace) {
-                      print('Error loading image: $error'); // Debug print
+                      if (kDebugMode) {
+                        print('Error loading image: $error');
+                      } // Debug print
                       return Icon(
                         Icons.account_circle,
                         size: widget.size,
@@ -164,7 +169,7 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
             ],
           ),
         if (widget.showButtons) ...[
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -173,7 +178,7 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
                 child:
                     Text(_imageUrl != null ? 'Delete Photo' : 'Upload Photo'),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: _toggleVisibility,
                 child: Text(_isVisible ? 'Hide Photo' : 'Show Photo'),

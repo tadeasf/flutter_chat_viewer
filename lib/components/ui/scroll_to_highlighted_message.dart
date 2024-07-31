@@ -7,7 +7,7 @@ void scrollToHighlightedMessage(int currentSearchIndex, List<int> searchResults,
     final int messageIndex = searchResults[currentSearchIndex];
     itemScrollController.scrollTo(
       index: messageIndex,
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       curve: Curves
           .easeInOutCubic, // This will align the item to the top of the viewport
       alignment: 0.0,

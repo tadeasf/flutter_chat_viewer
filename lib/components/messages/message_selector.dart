@@ -4,17 +4,17 @@ import 'package:image_picker/image_picker.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'dart:async';
 import 'dart:io';
-import 'load_collections.dart';
+import '../api_db/load_collections.dart';
 import 'fetch_messages.dart';
-import 'search_messages.dart';
-import 'photo_handler.dart';
-import 'date_selector.dart';
-import 'theme_manager.dart';
+import '../search/search_messages.dart';
+import '../gallery/photo_handler.dart';
+import '../ui/date_selector.dart';
+import '../ui/theme_manager.dart';
 import 'message_list.dart';
-import 'profile_photo.dart'; // Import ProfilePhoto
-import 'profile_photo_manager.dart'; // Add this import
-import 'database_manager.dart'; // Add this import
-import 'navigate_search.dart'; // Add this import
+import '../gallery/profile_photo.dart'; // Import ProfilePhoto
+import '../gallery/profile_photo_manager.dart'; // Add this import
+import '../api_db/database_manager.dart'; // Add this import
+import '../search/navigate_search.dart'; // Add this import
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -24,10 +24,10 @@ class MessageSelector extends StatefulWidget {
       {super.key, required this.setThemeMode, required this.themeMode});
 
   @override
-  _MessageSelectorState createState() => _MessageSelectorState();
+  MessageSelectorState createState() => MessageSelectorState();
 }
 
-class _MessageSelectorState extends State<MessageSelector> {
+class MessageSelectorState extends State<MessageSelector> {
   List<Map<String, dynamic>> collections = [];
   List<Map<String, dynamic>> filteredCollections = [];
   String? selectedCollection;
@@ -108,7 +108,7 @@ class _MessageSelectorState extends State<MessageSelector> {
   void _scrollToHighlightedMessage(int index) {
     itemScrollController.scrollTo(
       index: index,
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOutCubic,
       alignment: 0.0,
     );
@@ -214,18 +214,18 @@ class _MessageSelectorState extends State<MessageSelector> {
                 : 'Show Profile Photo',
           ),
           IconButton(
-            icon: Icon(Icons.storage),
+            icon: const Icon(Icons.storage),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text('Database Management'),
+                    title: const Text('Database Management'),
                     content:
                         DatabaseManager(refreshCollections: refreshCollections),
                     actions: [
                       TextButton(
-                        child: Text('Close'),
+                        child: const Text('Close'),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
@@ -432,10 +432,10 @@ class CustomDropdown extends StatefulWidget {
   });
 
   @override
-  _CustomDropdownState createState() => _CustomDropdownState();
+  CustomDropdownState createState() => CustomDropdownState();
 }
 
-class _CustomDropdownState extends State<CustomDropdown> {
+class CustomDropdownState extends State<CustomDropdown> {
   bool isOpen = false;
 
   @override
@@ -449,7 +449,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
             });
           },
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(4),
@@ -465,7 +465,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
         ),
         if (isOpen)
           Container(
-            margin: EdgeInsets.only(top: 4),
+            margin: const EdgeInsets.only(top: 4),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(4),
@@ -476,7 +476,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
                   padding: const EdgeInsets.all(8.0),
                   child: TextField(
                     controller: widget.searchController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Search collections...',
                       prefixIcon: Icon(Icons.search),
                       border: OutlineInputBorder(),
@@ -497,7 +497,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
                           value: percentage,
                           backgroundColor: Colors.grey[300],
                           valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.blue),
+                              const AlwaysStoppedAnimation<Color>(Colors.blue),
                         ),
                         onTap: () {
                           widget.onChanged(item['name']);

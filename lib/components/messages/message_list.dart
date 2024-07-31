@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'message_item.dart';
-import 'custom_scroll_behavior.dart';
+import '../ui/custom_scroll_behavior.dart';
 
 class MessageList extends StatelessWidget {
   final List<dynamic> messages;
@@ -28,8 +29,12 @@ class MessageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isSearchActive) {
-      print('Search Results: $searchResults');
-      print('Current Search Index: $currentSearchIndex');
+      if (kDebugMode) {
+        print('Search Results: $searchResults');
+      }
+      if (kDebugMode) {
+        print('Current Search Index: $currentSearchIndex');
+      }
     }
 
     return ScrollConfiguration(
@@ -42,7 +47,9 @@ class MessageList extends StatelessWidget {
               searchResults.contains(index) &&
               searchResults.indexOf(index) == currentSearchIndex;
           if (isSearchActive) {
-            print('Message at index $index is highlighted: $isHighlighted');
+            if (kDebugMode) {
+              print('Message at index $index is highlighted: $isHighlighted');
+            }
           }
           return MessageItem(
             message: message,

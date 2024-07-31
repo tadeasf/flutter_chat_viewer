@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
-import 'api_service.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
+import '../api_db/api_service.dart';
 
 Future<void> fetchMessages(
     String? selectedCollection,
@@ -20,7 +21,9 @@ Future<void> fetchMessages(
     setMessages(loadedMessages);
     setLoading(false);
   } catch (e) {
-    print('Error fetching messages: $e');
+    if (kDebugMode) {
+      print('Error fetching messages: $e');
+    }
     setLoading(false);
   }
 }

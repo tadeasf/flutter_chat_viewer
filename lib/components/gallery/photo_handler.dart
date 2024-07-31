@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'api_service.dart';
+import '../api_db/api_service.dart';
 import 'photo_gallery.dart';
 
 class PhotoHandler {
@@ -42,7 +43,11 @@ class PhotoHandler {
         );
       }
     } catch (error) {
-      print('Failed to fetch photo data: $error');
+      if (kDebugMode) {
+        if (kDebugMode) {
+          print('Failed to fetch photo data: $error');
+        }
+      }
       setState(() {
         isGalleryLoading = false;
       });
@@ -71,7 +76,9 @@ class PhotoHandler {
         checkPhotoAvailability(selectedCollection, setState);
       }
     } catch (e) {
-      print('Error uploading photo: $e');
+      if (kDebugMode) {
+        print('Error uploading photo: $e');
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Error uploading photo')));
@@ -90,7 +97,9 @@ class PhotoHandler {
         isPhotoAvailable = isAvailable;
       });
     } catch (e) {
-      print('Error checking photo availability: $e');
+      if (kDebugMode) {
+        print('Error checking photo availability: $e');
+      }
     }
   }
 
@@ -102,7 +111,9 @@ class PhotoHandler {
         isPhotoAvailable = false;
       });
     } catch (e) {
-      print('Error deleting photo: $e');
+      if (kDebugMode) {
+        print('Error deleting photo: $e');
+      }
     }
   }
 }
