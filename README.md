@@ -62,3 +62,20 @@ yamlCopyflutter_native_splash:
 Run these commands:
 Copyflutter pub run flutter_launcher_icons:main
 flutter pub run flutter_native_splash:create
+
+build signed apk from appbundle:
+
+```sh
+bundletool build-apks --bundle=/Users/tadeasfort/Documents/coding_projects/flutter_chat_viewer/build/app/outputs/bundle/release/app-release.aab \
+--output=/Users/tadeasfort/Documents/coding_projects/flutter_chat_viewer/build/app/outputs/apk/app-release.apks \
+--ks=/Users/tadeasfort/key.jks \
+--ks-pass=pass:pass \
+--ks-key-alias=key \
+--key-pass=pass:pass
+```
+
+verify built apks:
+
+```sh
+jarsigner -verify -verbose -certs /Users/tadeasfort/Documents/coding_projects/flutter_chat_viewer/build/app/outputs/flutter-apk/app-release.apk
+```
