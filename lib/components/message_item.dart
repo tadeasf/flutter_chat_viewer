@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:photo_view/photo_view.dart';
 import '../components/api_service.dart';
 import 'message_profile_photo.dart';
+import 'photo_view_screen.dart';
 
 class MessageItem extends StatefulWidget {
   final Map<String, dynamic> message;
@@ -26,7 +26,6 @@ class MessageItem extends StatefulWidget {
 
 class _MessageItemState extends State<MessageItem> {
   bool _isExpanded = false;
-  bool _isPhotoExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -81,14 +80,19 @@ class _MessageItemState extends State<MessageItem> {
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () {
-                setState(() {
-                  _isPhotoExpanded = !_isPhotoExpanded;
-                });
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PhotoViewScreen(
+                      imageUrl: photoUrl,
+                    ),
+                  ),
+                );
               },
               child: Image.network(
                 photoUrl,
-                height: _isPhotoExpanded ? 400 : 200,
-                width: _isPhotoExpanded ? 400 : 200,
+                height: 200,
+                width: 200,
                 fit: BoxFit.cover,
                 loadingBuilder: (BuildContext context, Widget child,
                     ImageChunkEvent? loadingProgress) {
@@ -181,42 +185,6 @@ class _MessageItemState extends State<MessageItem> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class PhotoViewScreen extends StatelessWidget {
-  final String imageUrl;
-
-  const PhotoViewScreen({super.key, required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: PhotoView(
-        imageProvider: NetworkImage(imageUrl),
-        minScale: PhotoViewComputedScale.contained * 0.8,
-        maxScale: PhotoViewComputedScale.covered * 2,
-        backgroundDecoration: const BoxDecoration(
-          color: Colors.black,
-        ),
-        loadingBuilder: (context, event) => Center(
-          child: CircularProgressIndicator(
-            value: event == null
-                ? 0
-                : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
-          ),
-        ),
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-              child: Text('Failed to load image',
-                  style: TextStyle(color: Colors.white)));
-        },
       ),
     );
   }

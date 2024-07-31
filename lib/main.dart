@@ -1,4 +1,3 @@
-// TODO: add search photo function
 // TODO: in the gallery when photo is enlarged add save function
 
 import 'package:flutter/material.dart';

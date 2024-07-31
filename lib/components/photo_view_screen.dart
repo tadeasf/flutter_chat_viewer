@@ -1,10 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:http/http.dart' as http;
 
 class PhotoViewScreen extends StatelessWidget {
   final String imageUrl;
 
-  const PhotoViewScreen({super.key, required this.imageUrl});
+  const PhotoViewScreen({
+    super.key,
+    required this.imageUrl,
+  });
+
+  Future<void> _downloadImage(BuildContext context) async {
+    try {
+      // Download the image
+      final response = await http.get(Uri.parse(imageUrl));
+
+      // Save the image to gallery
+      final result = await ImageGallerySaver.saveImage(response.bodyBytes,
+          quality: 100,
+          name: "downloaded_image_${DateTime.now().millisecondsSinceEpoch}");
+
+      if (context.mounted) {
+        if (result['isSuccess']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Image saved to gallery')),
+          );
+        } else {
+          throw Exception('Failed to save image');
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to save image')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,6 +45,12 @@ class PhotoViewScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: () => _downloadImage(context),
+          ),
+        ],
       ),
       body: PhotoView(
         imageProvider: NetworkImage(imageUrl),
