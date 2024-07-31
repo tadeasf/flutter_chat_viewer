@@ -11,6 +11,8 @@ import '../profile_photo/profile_photo_manager.dart';
 import '../api_db/database_manager.dart';
 import '../search/navigate_search.dart';
 import '../app_drawer.dart';
+import '../navbar.dart';
+import 'collection_selector.dart';
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -46,13 +48,13 @@ class MessageSelectorState extends State<MessageSelector> {
   Timer? _debounce;
   bool isSearchActive = false;
   String? profilePhotoUrl;
-  bool _isProfilePhotoVisible = true;
+  final bool _isProfilePhotoVisible = true;
   int get maxMessageCount => filteredCollections.isNotEmpty
       ? filteredCollections
           .map((c) => c['messageCount'] as int)
           .reduce((a, b) => a > b ? a : b)
       : 1;
-  bool isDropdownOpen = false;
+  bool isCollectionSelectorVisible = false;
 
   @override
   void initState() {
@@ -61,6 +63,7 @@ class MessageSelectorState extends State<MessageSelector> {
       setState(() {
         collections = loadedCollections;
         filteredCollections = loadedCollections;
+        isCollectionSelectorVisible = selectedCollection == null;
       });
     });
   }
@@ -152,6 +155,7 @@ class MessageSelectorState extends State<MessageSelector> {
   Future<void> _changeCollection(String? newValue) async {
     setState(() {
       selectedCollection = newValue;
+      isCollectionSelectorVisible = false;
     });
     if (selectedCollection != null) {
       await PhotoHandler.checkPhotoAvailability(selectedCollection, setState);
@@ -159,13 +163,11 @@ class MessageSelectorState extends State<MessageSelector> {
           setLoading, setMessages);
       profilePhotoUrl =
           await ProfilePhotoManager.getProfilePhotoUrl(selectedCollection!);
+    } else {
+      setState(() {
+        isCollectionSelectorVisible = true;
+      });
     }
-  }
-
-  void _toggleProfilePhotoVisibility() {
-    setState(() {
-      _isProfilePhotoVisible = !_isProfilePhotoVisible;
-    });
   }
 
   void refreshCollections() {
@@ -177,60 +179,50 @@ class MessageSelectorState extends State<MessageSelector> {
     });
   }
 
+  void toggleCollectionSelector() {
+    setState(() {
+      isCollectionSelectorVisible = !isCollectionSelectorVisible;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chat Viewer'),
-        actions: [
-          IconButton(
-            icon: Icon(isSearchVisible ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                isSearchVisible = !isSearchVisible;
-                if (!isSearchVisible) {
-                  searchController.clear();
-                  searchResults.clear();
-                  currentSearchIndex = -1;
-                  isSearchActive = false;
-                }
-              });
-            },
-          ),
-          IconButton(
-            icon: Icon(_isProfilePhotoVisible
-                ? Icons.visibility_off
-                : Icons.visibility),
-            onPressed: _toggleProfilePhotoVisibility,
-            tooltip: _isProfilePhotoVisible
-                ? 'Hide Profile Photo'
-                : 'Show Profile Photo',
-          ),
-          IconButton(
-            icon: const Icon(Icons.storage),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Database Management'),
-                    content:
-                        DatabaseManager(refreshCollections: refreshCollections),
-                    actions: [
-                      TextButton(
-                        child: const Text('Close'),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  );
-                },
+      appBar: Navbar(
+        title: 'Chat Viewer',
+        onSearchPressed: () {
+          setState(() {
+            isSearchVisible = !isSearchVisible;
+            if (!isSearchVisible) {
+              searchController.clear();
+              searchResults.clear();
+              currentSearchIndex = -1;
+              isSearchActive = false;
+            }
+          });
+        },
+        onDatabasePressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Database Management'),
+                content:
+                    DatabaseManager(refreshCollections: refreshCollections),
+                actions: [
+                  TextButton(
+                    child: const Text('Close'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
               );
             },
-            tooltip: 'Database Management',
-          ),
-        ],
+          );
+        },
+        onCollectionSelectorPressed: toggleCollectionSelector,
+        isCollectionSelectorVisible: isCollectionSelectorVisible,
       ),
       drawer: AppDrawer(
         selectedCollection: selectedCollection,
@@ -248,25 +240,21 @@ class MessageSelectorState extends State<MessageSelector> {
       ),
       body: Column(
         children: <Widget>[
+          if (isCollectionSelectorVisible || selectedCollection == null)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: CollectionSelector(
+                selectedCollection: selectedCollection,
+                initialCollections: filteredCollections,
+                onCollectionChanged: _changeCollection,
+                maxMessageCount: maxMessageCount,
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Text('Select Collection:',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                CustomDropdown(
-                  value: selectedCollection,
-                  hint: 'Select a collection',
-                  onChanged: _changeCollection,
-                  items: filteredCollections,
-                  searchController: searchController,
-                  onSearch: filterCollections,
-                  maxMessageCount: maxMessageCount,
-                ),
-                const SizedBox(height: 20),
                 if (isSearchVisible) ...[
                   Row(
                     children: [
@@ -321,112 +309,6 @@ class MessageSelectorState extends State<MessageSelector> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class CustomDropdown extends StatefulWidget {
-  final String? value;
-  final String hint;
-  final Function(String?) onChanged;
-  final List<Map<String, dynamic>> items;
-  final TextEditingController searchController;
-  final Function(String) onSearch;
-  final int maxMessageCount;
-
-  const CustomDropdown({
-    super.key,
-    required this.value,
-    required this.hint,
-    required this.onChanged,
-    required this.items,
-    required this.searchController,
-    required this.onSearch,
-    required this.maxMessageCount,
-  });
-
-  @override
-  CustomDropdownState createState() => CustomDropdownState();
-}
-
-class CustomDropdownState extends State<CustomDropdown> {
-  bool isOpen = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: () {
-            setState(() {
-              isOpen = !isOpen;
-            });
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(widget.value ?? widget.hint),
-                Icon(isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down),
-              ],
-            ),
-          ),
-        ),
-        if (isOpen)
-          Container(
-            margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: widget.searchController,
-                    decoration: const InputDecoration(
-                      hintText: 'Search collections...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: widget.onSearch,
-                  ),
-                ),
-                SizedBox(
-                  height: 200,
-                  child: ListView(
-                    children: widget.items.map((item) {
-                      final int messageCount = item['messageCount'] as int;
-                      final double percentage =
-                          messageCount / widget.maxMessageCount;
-                      return ListTile(
-                        title: Text('${item['name']} ($messageCount messages)'),
-                        subtitle: LinearProgressIndicator(
-                          value: percentage,
-                          backgroundColor: Colors.grey[300],
-                          valueColor:
-                              const AlwaysStoppedAnimation<Color>(Colors.blue),
-                        ),
-                        onTap: () {
-                          widget.onChanged(item['name']);
-                          setState(() {
-                            isOpen = false;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
     );
   }
 }

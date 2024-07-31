@@ -37,10 +37,12 @@ class ProfilePhotoState extends State<ProfilePhoto> {
 
   Future<void> _fetchProfilePhoto() async {
     if (widget.profilePhotoUrl != null) {
-      setState(() {
-        _imageUrl = widget.profilePhotoUrl;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _imageUrl = widget.profilePhotoUrl;
+          _isLoading = false;
+        });
+      }
     } else {
       try {
         final url =
@@ -100,13 +102,15 @@ class ProfilePhotoState extends State<ProfilePhoto> {
       if (kDebugMode) {
         print('Error ${isUpload ? 'uploading' : 'deleting'} photo: $e');
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Failed to ${isUpload ? 'upload' : 'delete'} photo. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Failed to ${isUpload ? 'upload' : 'delete'} photo. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
