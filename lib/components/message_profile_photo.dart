@@ -5,12 +5,14 @@ class MessageProfilePhoto extends StatelessWidget {
   final String collectionName;
   final double size;
   final bool isOnline;
+  final String? profilePhotoUrl;
 
   const MessageProfilePhoto({
     super.key,
     required this.collectionName,
     this.size = 40.0,
     this.isOnline = false,
+    required this.profilePhotoUrl,
   });
 
   @override
@@ -20,6 +22,7 @@ class MessageProfilePhoto extends StatelessWidget {
       size: size,
       isOnline: isOnline,
       showButtons: false,
+      profilePhotoUrl: profilePhotoUrl,
     );
   }
 }
