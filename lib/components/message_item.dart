@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
 import '../components/api_service.dart';
 
-class MessageItem extends StatelessWidget {
+class MessageItem extends StatefulWidget {
   final Map<String, dynamic> message;
   final bool isAuthor;
   final bool isHighlighted;
@@ -16,16 +16,24 @@ class MessageItem extends StatelessWidget {
   });
 
   @override
+  _MessageItemState createState() => _MessageItemState();
+}
+
+class _MessageItemState extends State<MessageItem> {
+  bool _isExpanded = false;
+  bool _isPhotoExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final isInstagram = message['is_geoblocked_for_viewer'] != null;
+    final isInstagram = widget.message['is_geoblocked_for_viewer'] != null;
 
     Color getBubbleColor() {
-      if (isHighlighted) {
+      if (widget.isHighlighted) {
         return isDarkMode ? Colors.yellow[700]! : Colors.yellow[300]!;
       }
       if (isInstagram) {
-        return isAuthor
+        return widget.isAuthor
             ? (isDarkMode
                 ? Colors.pink[900]!.withOpacity(0.25)
                 : Colors.pink[500]!.withOpacity(0.5))
@@ -34,7 +42,7 @@ class MessageItem extends StatelessWidget {
                 : Colors.pink[300]!.withOpacity(0.5));
       }
       // Facebook styling
-      return isAuthor
+      return widget.isAuthor
           ? (isDarkMode
               ? Colors.grey[800]!.withOpacity(0.5)
               : Colors.grey[300]!.withOpacity(0.5))
@@ -43,33 +51,39 @@ class MessageItem extends StatelessWidget {
               : Colors.grey[400]!.withOpacity(0.5));
     }
 
+    Color getTextColor() {
+      if (widget.isHighlighted) {
+        return isDarkMode ? Colors.black : Colors.black;
+      }
+      return isDarkMode ? Colors.white70 : Colors.black87;
+    }
+
     Widget buildMessageContent() {
-      if (message['photos'] != null && (message['photos'] as List).isNotEmpty) {
-        final photoUrl = ApiService.getPhotoUrl(message['photos'][0]['uri']);
+      if (widget.message['photos'] != null &&
+          (widget.message['photos'] as List).isNotEmpty) {
+        final photoUrl =
+            ApiService.getPhotoUrl(widget.message['photos'][0]['uri']);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (message['content'] != null)
+            if (widget.message['content'] != null)
               Text(
-                message['content'],
+                widget.message['content'],
                 style: TextStyle(
-                  color: isDarkMode ? Colors.white70 : Colors.black87,
+                  color: getTextColor(),
                 ),
               ),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PhotoViewScreen(imageUrl: photoUrl),
-                  ),
-                );
+                setState(() {
+                  _isPhotoExpanded = !_isPhotoExpanded;
+                });
               },
               child: Image.network(
                 photoUrl,
-                height: 200,
-                width: 200,
+                height: _isPhotoExpanded ? 400 : 200,
+                width: _isPhotoExpanded ? 400 : 200,
                 fit: BoxFit.cover,
                 loadingBuilder: (BuildContext context, Widget child,
                     ImageChunkEvent? loadingProgress) {
@@ -92,52 +106,63 @@ class MessageItem extends StatelessWidget {
         );
       } else {
         return Text(
-          message['content'] ?? 'No content',
+          widget.message['content'] ?? 'No content',
           style: TextStyle(
-            color: isDarkMode ? Colors.white70 : Colors.black87,
+            color: getTextColor(),
           ),
         );
       }
     }
 
-    return Align(
-      alignment: isAuthor ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: getBubbleColor(),
-          borderRadius: BorderRadius.circular(12),
-          border: isHighlighted
-              ? Border.all(
-                  color: isDarkMode ? Colors.yellow : Colors.orange,
-                  width: 2,
-                )
-              : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              message['sender_name'] ?? 'Unknown sender',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : Colors.black87,
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _isExpanded = !_isExpanded;
+        });
+      },
+      child: Align(
+        alignment:
+            widget.isAuthor ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: getBubbleColor(),
+            borderRadius: BorderRadius.circular(12),
+            border: widget.isHighlighted
+                ? Border.all(
+                    color: isDarkMode ? Colors.yellow : Colors.orange,
+                    width: 2,
+                  )
+                : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.message['sender_name'] ?? 'Unknown sender',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: getTextColor(),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            buildMessageContent(),
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('yyyy-MM-dd HH:mm').format(
-                DateTime.fromMillisecondsSinceEpoch(message['timestamp_ms']),
-              ),
-              style: TextStyle(
-                fontSize: 12,
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              buildMessageContent(),
+              if (_isExpanded) ...[
+                const SizedBox(height: 4),
+                Text(
+                  DateFormat('yyyy-MM-dd HH:mm').format(
+                    DateTime.fromMillisecondsSinceEpoch(
+                        widget.message['timestamp_ms']),
+                  ),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: getTextColor(),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );

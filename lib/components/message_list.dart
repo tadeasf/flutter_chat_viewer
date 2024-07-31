@@ -21,14 +21,20 @@ class MessageList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Debug prints to check searchResults and currentSearchIndex
+    print('Search Results: $searchResults');
+    print('Current Search Index: $currentSearchIndex');
+
     return ScrollConfiguration(
       behavior: CustomScrollBehavior(),
       child: ScrollablePositionedList.builder(
         itemCount: messages.length,
         itemBuilder: (context, index) {
           final message = messages[index];
-          final isHighlighted =
-              searchResults.contains(index) && index == currentSearchIndex;
+          final isHighlighted = searchResults.contains(index) &&
+              searchResults.indexOf(index) == currentSearchIndex;
+          // Debug print to check isHighlighted value
+          print('Message at index $index is highlighted: $isHighlighted');
           return MessageItem(
             message: message,
             isAuthor: message['sender_name'] == 'Tadeáš Fořt',
