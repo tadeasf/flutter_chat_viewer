@@ -1,3 +1,6 @@
+// TODO: add search photo function
+// TODO: in the gallery when photo is enlarged add save function
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -39,7 +42,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chat Viewer',
+      title: 'Meta Chat Viewer',
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       themeMode: _themeMode,

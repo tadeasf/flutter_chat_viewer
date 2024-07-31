@@ -6,11 +6,16 @@ import 'package:http_parser/http_parser.dart'; // Add this import for MediaType
 class ApiService {
   static const String baseUrl = 'https://secondary.dev.tadeasfort.com';
 
-  static Future<List<String>> fetchCollections() async {
+  static Future<List<Map<String, dynamic>>> fetchCollections() async {
     final response = await http.get(Uri.parse('$baseUrl/collections'));
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
-      return data.map((item) => item['name'].toString()).toList();
+      return data
+          .map((item) => {
+                'name': item['name'].toString(),
+                'messageCount': item['messageCount'] as int,
+              })
+          .toList();
     } else {
       throw Exception('Failed to load collections');
     }

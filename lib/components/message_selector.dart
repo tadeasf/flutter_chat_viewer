@@ -15,6 +15,7 @@ import 'message_list.dart';
 import 'scroll_to_highlighted_message.dart';
 import 'profile_photo.dart'; // Import ProfilePhoto
 import 'profile_photo_manager.dart'; // Add this import
+import 'database_manager.dart'; // Add this import
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -28,7 +29,8 @@ class MessageSelector extends StatefulWidget {
 }
 
 class _MessageSelectorState extends State<MessageSelector> {
-  List<String> collections = [];
+  List<Map<String, dynamic>> collections = [];
+  List<Map<String, dynamic>> filteredCollections = [];
   String? selectedCollection;
   DateTime? fromDate;
   DateTime? toDate;
@@ -51,6 +53,12 @@ class _MessageSelectorState extends State<MessageSelector> {
   bool isSearchActive = false; // Added this flag
   String? profilePhotoUrl; // Add this property
   bool _isProfilePhotoVisible = true; // Add this property
+  int get maxMessageCount => filteredCollections.isNotEmpty
+      ? filteredCollections
+          .map((c) => c['messageCount'] as int)
+          .reduce((a, b) => a > b ? a : b)
+      : 1;
+  bool isDropdownOpen = false;
 
   @override
   void initState() {
@@ -58,7 +66,17 @@ class _MessageSelectorState extends State<MessageSelector> {
     loadCollections((loadedCollections) {
       setState(() {
         collections = loadedCollections;
+        filteredCollections = loadedCollections;
       });
+    });
+  }
+
+  void filterCollections(String query) {
+    setState(() {
+      filteredCollections = collections
+          .where((collection) =>
+              collection['name'].toLowerCase().contains(query.toLowerCase()))
+          .toList();
     });
   }
 
@@ -152,6 +170,16 @@ class _MessageSelectorState extends State<MessageSelector> {
     });
   }
 
+  // Add this method to refresh collections
+  void refreshCollections() {
+    loadCollections((loadedCollections) {
+      setState(() {
+        collections = loadedCollections;
+        filteredCollections = loadedCollections;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -180,6 +208,30 @@ class _MessageSelectorState extends State<MessageSelector> {
             tooltip: _isProfilePhotoVisible
                 ? 'Hide Profile Photo'
                 : 'Show Profile Photo',
+          ),
+          IconButton(
+            icon: Icon(Icons.storage),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text('Database Management'),
+                    content:
+                        DatabaseManager(refreshCollections: refreshCollections),
+                    actions: [
+                      TextButton(
+                        child: Text('Close'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            tooltip: 'Database Management',
           ),
         ],
       ),
@@ -261,18 +313,15 @@ class _MessageSelectorState extends State<MessageSelector> {
                 const Text('Select Collection:',
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                DropdownButton<String>(
+                const SizedBox(height: 8),
+                CustomDropdown(
                   value: selectedCollection,
-                  isExpanded: true,
-                  hint: const Text('Select a collection'),
+                  hint: 'Select a collection',
                   onChanged: _changeCollection,
-                  items:
-                      collections.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
+                  items: filteredCollections,
+                  searchController: searchController,
+                  onSearch: filterCollections,
+                  maxMessageCount: maxMessageCount,
                 ),
                 const SizedBox(height: 20),
                 if (isSearchVisible) ...[
@@ -362,6 +411,112 @@ class _MessageSelectorState extends State<MessageSelector> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class CustomDropdown extends StatefulWidget {
+  final String? value;
+  final String hint;
+  final Function(String?) onChanged;
+  final List<Map<String, dynamic>> items;
+  final TextEditingController searchController;
+  final Function(String) onSearch;
+  final int maxMessageCount;
+
+  const CustomDropdown({
+    super.key,
+    required this.value,
+    required this.hint,
+    required this.onChanged,
+    required this.items,
+    required this.searchController,
+    required this.onSearch,
+    required this.maxMessageCount,
+  });
+
+  @override
+  _CustomDropdownState createState() => _CustomDropdownState();
+}
+
+class _CustomDropdownState extends State<CustomDropdown> {
+  bool isOpen = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: () {
+            setState(() {
+              isOpen = !isOpen;
+            });
+          },
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(widget.value ?? widget.hint),
+                Icon(isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down),
+              ],
+            ),
+          ),
+        ),
+        if (isOpen)
+          Container(
+            margin: EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: widget.searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search collections...',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: widget.onSearch,
+                  ),
+                ),
+                SizedBox(
+                  height: 200,
+                  child: ListView(
+                    children: widget.items.map((item) {
+                      final int messageCount = item['messageCount'] as int;
+                      final double percentage =
+                          messageCount / widget.maxMessageCount;
+                      return ListTile(
+                        title: Text('${item['name']} ($messageCount messages)'),
+                        subtitle: LinearProgressIndicator(
+                          value: percentage,
+                          backgroundColor: Colors.grey[300],
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.blue),
+                        ),
+                        onTap: () {
+                          widget.onChanged(item['name']);
+                          setState(() {
+                            isOpen = false;
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
