@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:http_parser/http_parser.dart';
-import 'message_item.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'components/message_list.dart';
+import 'components/api_service.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
   _MyAppState createState() => _MyAppState();
 }
@@ -60,7 +59,8 @@ class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
   final ThemeMode themeMode;
 
-  MessageSelector({required this.setThemeMode, required this.themeMode});
+  const MessageSelector(
+      {super.key, required this.setThemeMode, required this.themeMode});
 
   @override
   _MessageSelectorState createState() => _MessageSelectorState();
@@ -77,6 +77,7 @@ class _MessageSelectorState extends State<MessageSelector> {
   File? _image;
   final picker = ImagePicker();
   bool isPhotoAvailable = false;
+
   List<int> searchResults = [];
   int currentSearchIndex = -1;
   bool isSearchVisible = false;
@@ -86,7 +87,7 @@ class _MessageSelectorState extends State<MessageSelector> {
   @override
   void initState() {
     super.initState();
-    fetchCollections();
+    _loadCollections();
   }
 
   @override
@@ -97,20 +98,40 @@ class _MessageSelectorState extends State<MessageSelector> {
     super.dispose();
   }
 
-  Future<void> fetchCollections() async {
+  Future<void> _loadCollections() async {
     try {
-      final response = await http
-          .get(Uri.parse('https://secondary.dev.tadeasfort.com/collections'));
-      if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
-        setState(() {
-          collections = data.map((item) => item['name'].toString()).toList();
-        });
-      } else {
-        print('Failed to load collections');
-      }
+      final loadedCollections = await ApiService.fetchCollections();
+      setState(() {
+        collections = loadedCollections;
+      });
     } catch (e) {
       print('Error fetching collections: $e');
+    }
+  }
+
+  Future<void> fetchMessages() async {
+    if (selectedCollection == null) return;
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final loadedMessages = await ApiService.fetchMessages(
+        selectedCollection!,
+        fromDate: fromDate != null
+            ? DateFormat('yyyy-MM-dd').format(fromDate!)
+            : null,
+        toDate:
+            toDate != null ? DateFormat('yyyy-MM-dd').format(toDate!) : null,
+      );
+      setState(() {
+        messages = loadedMessages;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching messages: $e');
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -137,52 +158,6 @@ class _MessageSelectorState extends State<MessageSelector> {
     }
   }
 
-  Future<void> fetchMessages() async {
-    if (selectedCollection == null) return;
-
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      String url =
-          'https://secondary.dev.tadeasfort.com/messages/${Uri.encodeComponent(selectedCollection!)}';
-
-      if (fromDate != null || toDate != null) {
-        List<String> queryParams = [];
-        if (fromDate != null) {
-          queryParams
-              .add('fromDate=${DateFormat('yyyy-MM-dd').format(fromDate!)}');
-        }
-        if (toDate != null) {
-          queryParams.add('toDate=${DateFormat('yyyy-MM-dd').format(toDate!)}');
-        }
-        if (queryParams.isNotEmpty) {
-          url += '?' + queryParams.join('&');
-        }
-      }
-
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        setState(() {
-          messages = json.decode(response.body);
-          isLoading = false;
-        });
-      } else {
-        print('Failed to load messages');
-        setState(() {
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Error fetching messages: $e');
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
   void searchMessages(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -197,44 +172,33 @@ class _MessageSelectorState extends State<MessageSelector> {
     });
   }
 
-  void _performSearch(String query) async {
-    final results = await compute(_searchMessagesCompute, {
-      'messages': messages,
-      'query': query.toLowerCase(),
-    });
-
+  void _performSearch(String query) {
     setState(() {
-      searchResults = results;
-      currentSearchIndex = results.isNotEmpty ? 0 : -1;
+      searchResults = messages
+          .asMap()
+          .entries
+          .where((entry) {
+            final message = entry.value;
+            final content = message['content']?.toLowerCase() ?? '';
+            final senderName = message['sender_name']?.toLowerCase() ?? '';
+            return content.contains(query.toLowerCase()) ||
+                senderName.contains(query.toLowerCase());
+          })
+          .map((e) => e.key)
+          .toList();
+      currentSearchIndex = searchResults.isNotEmpty ? 0 : -1;
     });
 
-    if (results.isNotEmpty) {
+    if (searchResults.isNotEmpty) {
       _scrollToHighlightedMessage();
     }
-  }
-
-  static List<int> _searchMessagesCompute(Map<String, dynamic> params) {
-    final messages = params['messages'] as List<dynamic>;
-    final query = params['query'] as String;
-    List<int> results = [];
-
-    for (int i = 0; i < messages.length; i++) {
-      final message = messages[i];
-      final content = (message['content'] ?? '').toLowerCase();
-      final senderName = (message['sender_name'] ?? '').toLowerCase();
-      if (content.contains(query) || senderName.contains(query)) {
-        results.add(i);
-      }
-    }
-
-    return results;
   }
 
   void _scrollToHighlightedMessage() {
     if (currentSearchIndex >= 0 && currentSearchIndex < searchResults.length) {
       final int messageIndex = searchResults[currentSearchIndex];
-      _scrollController.jumpTo(messageIndex *
-          100.0); // Adjust the multiplier based on your average item height
+      _scrollController.jumpTo(
+          messageIndex * 100.0); // Adjust based on your average item height
     }
   }
 
@@ -253,32 +217,17 @@ class _MessageSelectorState extends State<MessageSelector> {
   Future<void> _uploadImage() async {
     if (_image == null || selectedCollection == null) return;
 
-    final url = Uri.parse(
-        'https://secondary.dev.tadeasfort.com/upload/photo/${Uri.encodeComponent(selectedCollection!)}');
-    var request = http.MultipartRequest('POST', url);
-
-    request.files.add(await http.MultipartFile.fromPath(
-      'photo',
-      _image!.path,
-      contentType: MediaType('image', 'jpeg'),
-    ));
-
     try {
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Photo uploaded successfully')));
-        checkPhotoAvailability();
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to upload photo')));
-      }
+      await ApiService.uploadPhoto(selectedCollection!, _image!);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Photo uploaded successfully')));
+      checkPhotoAvailability();
     } catch (e) {
       print('Error uploading photo: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error uploading photo')));
+          .showSnackBar(const SnackBar(content: Text('Error uploading photo')));
     }
   }
 
@@ -295,17 +244,12 @@ class _MessageSelectorState extends State<MessageSelector> {
   Future<void> checkPhotoAvailability() async {
     if (selectedCollection == null) return;
 
-    final url = Uri.parse(
-        'https://secondary.dev.tadeasfort.com/messages/${Uri.encodeComponent(selectedCollection!)}/photo');
-
     try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          isPhotoAvailable = data['isPhotoAvailable'];
-        });
-      }
+      final isAvailable =
+          await ApiService.checkPhotoAvailability(selectedCollection!);
+      setState(() {
+        isPhotoAvailable = isAvailable;
+      });
     } catch (e) {
       print('Error checking photo availability: $e');
     }
@@ -316,12 +260,12 @@ class _MessageSelectorState extends State<MessageSelector> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Settings'),
+          title: const Text('Settings'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Theme Mode'),
+              const Text('Theme Mode'),
               DropdownButton<ThemeMode>(
                 value: widget.themeMode,
                 onChanged: (ThemeMode? newValue) {
@@ -341,7 +285,7 @@ class _MessageSelectorState extends State<MessageSelector> {
           ),
           actions: [
             TextButton(
-              child: Text('Close'),
+              child: const Text('Close'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -356,7 +300,7 @@ class _MessageSelectorState extends State<MessageSelector> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat Viewer'),
+        title: const Text('Chat Viewer'),
         actions: [
           IconButton(
             icon: Icon(isSearchVisible ? Icons.close : Icons.search),
@@ -381,7 +325,7 @@ class _MessageSelectorState extends State<MessageSelector> {
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor,
               ),
-              child: Text(
+              child: const Text(
                 'Chat Options',
                 style: TextStyle(
                   color: Colors.white,
@@ -400,22 +344,22 @@ class _MessageSelectorState extends State<MessageSelector> {
               onTap: () => _selectDate(context, false),
             ),
             ListTile(
-              title: Text('Select Photo'),
+              title: const Text('Select Photo'),
               onTap: () {
                 _getImage();
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              title: Text('Upload Photo'),
+              title: const Text('Upload Photo'),
               onTap: () {
                 _uploadImage();
                 Navigator.pop(context);
               },
             ),
-            Divider(),
+            const Divider(),
             ListTile(
-              title: Text('Settings'),
+              title: const Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
                 _showSettingsDialog();
@@ -427,17 +371,17 @@ class _MessageSelectorState extends State<MessageSelector> {
       body: Column(
         children: <Widget>[
           Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Select Collection:',
+                const Text('Select Collection:',
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 DropdownButton<String>(
                   value: selectedCollection,
                   isExpanded: true,
-                  hint: Text('Select a collection'),
+                  hint: const Text('Select a collection'),
                   onChanged: (String? newValue) {
                     setState(() {
                       selectedCollection = newValue;
@@ -453,14 +397,14 @@ class _MessageSelectorState extends State<MessageSelector> {
                     );
                   }).toList(),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 if (isSearchVisible) ...[
                   Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: searchController,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: 'Search messages',
                             suffixIcon: Icon(Icons.search),
                           ),
@@ -468,11 +412,11 @@ class _MessageSelectorState extends State<MessageSelector> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.arrow_upward),
+                        icon: const Icon(Icons.arrow_upward),
                         onPressed: () => navigateSearch(-1),
                       ),
                       IconButton(
-                        icon: Icon(Icons.arrow_downward),
+                        icon: const Icon(Icons.arrow_downward),
                         onPressed: () => navigateSearch(1),
                       ),
                     ],
@@ -480,13 +424,13 @@ class _MessageSelectorState extends State<MessageSelector> {
                   Text(
                       '${searchResults.isNotEmpty ? currentSearchIndex + 1 : 0}/${searchResults.length} results'),
                 ],
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 if (isPhotoAvailable && selectedCollection != null)
                   Image.network(
                     'https://secondary.dev.tadeasfort.com/serve/photo/${Uri.encodeComponent(selectedCollection!)}',
                     height: 100,
                     errorBuilder: (context, error, stackTrace) {
-                      return Text('Failed to load image');
+                      return const Text('Failed to load image');
                     },
                   ),
               ],
@@ -494,47 +438,16 @@ class _MessageSelectorState extends State<MessageSelector> {
           ),
           Expanded(
             child: isLoading
-                ? Center(child: CircularProgressIndicator())
-                : ScrollConfiguration(
-                    behavior: CustomScrollBehavior(),
-                    child: Scrollbar(
-                      controller: _scrollController,
-                      thumbVisibility: true,
-                      thickness: 8.0,
-                      radius: Radius.circular(4.0),
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          final message = messages[index];
-                          return MessageItem(
-                            message: message,
-                            isAuthor: message['sender_name'] == 'Tadeáš Fořt',
-                            isHighlighted: searchResults.contains(index) &&
-                                index == searchResults[currentSearchIndex],
-                          );
-                        },
-                        cacheExtent:
-                            100, // Adjust this value based on your needs
-                      ),
-                    ),
+                ? const Center(child: CircularProgressIndicator())
+                : MessageList(
+                    messages: messages,
+                    searchResults: searchResults,
+                    currentSearchIndex: currentSearchIndex,
+                    scrollController: _scrollController,
                   ),
           ),
         ],
       ),
     );
-  }
-}
-
-class CustomScrollBehavior extends ScrollBehavior {
-  @override
-  Widget buildOverscrollIndicator(
-      BuildContext context, Widget child, ScrollableDetails details) {
-    return child;
-  }
-
-  @override
-  ScrollPhysics getScrollPhysics(BuildContext context) {
-    return const ClampingScrollPhysics();
   }
 }

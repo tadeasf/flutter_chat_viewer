@@ -6,7 +6,7 @@ class MessageItem extends StatelessWidget {
   final bool isAuthor;
   final bool isHighlighted;
 
-  MessageItem({
+  const MessageItem({
     required this.message,
     required this.isAuthor,
     required this.isHighlighted,

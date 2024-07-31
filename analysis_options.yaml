@@ -12,7 +12,6 @@ analyzer:
     avoid_print: ignore
     library_private_types_in_public_api: ignore
     prefer_const_constructors: ignore
-    prefer_interpolation_to_compose ignore_strings: ignore
     use_key_in_widget_constructors: ignore
 include: package:flutter_lints/flutter.yaml
 
