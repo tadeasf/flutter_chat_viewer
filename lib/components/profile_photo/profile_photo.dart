@@ -14,7 +14,7 @@ class ProfilePhoto extends StatefulWidget {
   const ProfilePhoto({
     super.key,
     required this.collectionName,
-    this.size = 50.0,
+    this.size = 100.0,
     this.isOnline = false,
     this.showButtons = true,
     this.profilePhotoUrl,
@@ -28,7 +28,6 @@ class ProfilePhotoState extends State<ProfilePhoto> {
   String? _imageUrl;
   bool _isLoading = true;
   bool _isError = false;
-  bool _isVisible = true;
 
   @override
   void initState() {
@@ -66,42 +65,51 @@ class ProfilePhotoState extends State<ProfilePhoto> {
     }
   }
 
-  void _toggleVisibility() {
-    setState(() {
-      _isVisible = !_isVisible;
-    });
-  }
-
-  Future<void> _handlePhotoAction() async {
-    if (_imageUrl != null) {
-      // Delete photo
-      await PhotoHandler.deletePhoto(widget.collectionName, (newState) {
-        if (mounted) {
-          setState(newState);
+  Future<void> _handlePhotoAction(bool isUpload) async {
+    setState(() => _isLoading = true);
+    try {
+      if (isUpload) {
+        // Upload photo
+        await PhotoHandler.getImage(ImagePicker(), (newState) {
+          if (mounted) {
+            setState(newState);
+          }
+        });
+        if (PhotoHandler.image != null && mounted) {
+          await PhotoHandler.uploadImage(
+            context,
+            PhotoHandler.image,
+            widget.collectionName,
+            (newState) {
+              if (mounted) {
+                setState(newState);
+              }
+            },
+          );
         }
-      });
-      if (mounted) {
-        _fetchProfilePhoto(); // Refresh the photo status
+      } else {
+        // Delete photo
+        await PhotoHandler.deletePhoto(widget.collectionName, (newState) {
+          if (mounted) {
+            setState(newState);
+          }
+        });
       }
-    } else {
-      // Upload photo
-      await PhotoHandler.getImage(ImagePicker(), (newState) {
-        if (mounted) {
-          setState(newState);
-        }
-      });
-      if (PhotoHandler.image != null && mounted) {
-        await PhotoHandler.uploadImage(
-          context,
-          PhotoHandler.image,
-          widget.collectionName,
-          (newState) {
-            if (mounted) {
-              setState(newState);
-            }
-          },
-        );
-        _fetchProfilePhoto(); // Refresh the photo status
+      _fetchProfilePhoto(); // Refresh the photo status
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error ${isUpload ? 'uploading' : 'deleting'} photo: $e');
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Failed to ${isUpload ? 'upload' : 'delete'} photo. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -109,79 +117,80 @@ class ProfilePhotoState extends State<ProfilePhoto> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (_isVisible)
-          Stack(
-            children: [
-              if (_isLoading)
-                Container(
+        Stack(
+          children: [
+            if (_isLoading)
+              Container(
+                width: widget.size,
+                height: widget.size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.grey[300],
+                ),
+                child: const Center(child: CircularProgressIndicator()),
+              )
+            else if (_isError || _imageUrl == null)
+              Icon(
+                Icons.account_circle,
+                size: widget.size,
+                color: Colors.grey,
+              )
+            else
+              ClipOval(
+                child: Image.network(
+                  _imageUrl!,
                   width: widget.size,
                   height: widget.size,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    if (kDebugMode) {
+                      print('Error loading image: $error');
+                    } // Debug print
+                    return Icon(
+                      Icons.account_circle,
+                      size: widget.size,
+                      color: Colors.grey,
+                    );
+                  },
+                ),
+              ),
+            if (widget.isOnline)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: widget.size * 0.3,
+                  height: widget.size * 0.3,
                   decoration: BoxDecoration(
+                    color: Colors.green,
                     shape: BoxShape.circle,
-                    color: Colors.grey[300],
-                  ),
-                  child: const Center(child: CircularProgressIndicator()),
-                )
-              else if (_isError || _imageUrl == null)
-                Icon(
-                  Icons.account_circle,
-                  size: widget.size,
-                  color: Colors.grey,
-                )
-              else
-                ClipOval(
-                  child: Image.network(
-                    _imageUrl!,
-                    width: widget.size,
-                    height: widget.size,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(child: CircularProgressIndicator());
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      if (kDebugMode) {
-                        print('Error loading image: $error');
-                      } // Debug print
-                      return Icon(
-                        Icons.account_circle,
-                        size: widget.size,
-                        color: Colors.grey,
-                      );
-                    },
+                    border: Border.all(color: Colors.white, width: 2),
                   ),
                 ),
-              if (widget.isOnline)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: widget.size * 0.3,
-                    height: widget.size * 0.3,
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+              ),
+          ],
+        ),
         if (widget.showButtons) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                onPressed: _handlePhotoAction,
-                child:
-                    Text(_imageUrl != null ? 'Delete Photo' : 'Upload Photo'),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => _handlePhotoAction(false),
+                tooltip: 'Delete Photo',
               ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _toggleVisibility,
-                child: Text(_isVisible ? 'Hide Photo' : 'Show Photo'),
+              const SizedBox(width: 16),
+              IconButton(
+                icon: const Icon(Icons.upload),
+                onPressed: () => _handlePhotoAction(true),
+                tooltip: 'Upload Photo',
               ),
             ],
           ),

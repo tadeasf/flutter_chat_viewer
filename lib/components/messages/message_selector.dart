@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'dart:async';
-import 'dart:io';
 import '../api_db/load_collections.dart';
 import 'fetch_messages.dart';
 import '../search/search_messages.dart';
 import '../gallery/photo_handler.dart';
-import '../ui_utils/date_selector.dart';
-import '../ui_utils/theme_manager.dart';
 import 'message_list.dart';
-import '../profile_photo/profile_photo.dart'; // Import ProfilePhoto
-import '../profile_photo/profile_photo_manager.dart'; // Add this import
-import '../api_db/database_manager.dart'; // Add this import
-import '../search/navigate_search.dart'; // Add this import
+import '../profile_photo/profile_photo_manager.dart';
+import '../api_db/database_manager.dart';
+import '../search/navigate_search.dart';
+import '../app_drawer.dart';
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -36,7 +32,6 @@ class MessageSelectorState extends State<MessageSelector> {
   List<dynamic> messages = [];
   bool isLoading = false;
   TextEditingController searchController = TextEditingController();
-  File? _image;
   final picker = ImagePicker();
   bool isPhotoAvailable = false;
   final ItemScrollController itemScrollController = ItemScrollController();
@@ -49,9 +44,9 @@ class MessageSelectorState extends State<MessageSelector> {
   bool isSearchVisible = false;
   final ScrollController _scrollController = ScrollController();
   Timer? _debounce;
-  bool isSearchActive = false; // Added this flag
-  String? profilePhotoUrl; // Add this property
-  bool _isProfilePhotoVisible = true; // Add this property
+  bool isSearchActive = false;
+  String? profilePhotoUrl;
+  bool _isProfilePhotoVisible = true;
   int get maxMessageCount => filteredCollections.isNotEmpty
       ? filteredCollections
           .map((c) => c['messageCount'] as int)
@@ -162,7 +157,6 @@ class MessageSelectorState extends State<MessageSelector> {
       await PhotoHandler.checkPhotoAvailability(selectedCollection, setState);
       await fetchMessages(selectedCollection, fromDate, toDate, setState,
           setLoading, setMessages);
-      // Fetch and store the profile photo URL
       profilePhotoUrl =
           await ProfilePhotoManager.getProfilePhotoUrl(selectedCollection!);
     }
@@ -174,7 +168,6 @@ class MessageSelectorState extends State<MessageSelector> {
     });
   }
 
-  // Add this method to refresh collections
   void refreshCollections() {
     loadCollections((loadedCollections) {
       setState(() {
@@ -239,73 +232,19 @@ class MessageSelectorState extends State<MessageSelector> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-              ),
-              child: const Text(
-                'Chat Options',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            ListTile(
-              title: const Text('Display All Images'),
-              onTap: () {
-                Navigator.pop(context);
-                PhotoHandler.handleShowAllPhotos(
-                  context,
-                  selectedCollection,
-                  setState,
-                  galleryPhotos,
-                  isGalleryLoading,
-                );
-              },
-            ),
-            ListTile(
-              title: Text(
-                  'From Date: ${fromDate != null ? DateFormat('yyyy-MM-dd').format(fromDate!) : 'Not set'}'),
-              onTap: () => DateSelector.selectDate(context, true, fromDate,
-                  toDate, setState, selectedCollection, fetchMessages),
-            ),
-            ListTile(
-              title: Text(
-                  'To Date: ${toDate != null ? DateFormat('yyyy-MM-dd').format(toDate!) : 'Not set'}'),
-              onTap: () => DateSelector.selectDate(context, false, fromDate,
-                  toDate, setState, selectedCollection, fetchMessages),
-            ),
-            ListTile(
-              title: const Text('Select Photo'),
-              onTap: () {
-                PhotoHandler.getImage(picker, setState);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Upload Photo'),
-              onTap: () {
-                PhotoHandler.uploadImage(
-                    context, _image, selectedCollection, setState);
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                ThemeManager.showSettingsDialog(
-                    context, widget.themeMode, widget.setThemeMode);
-              },
-            ),
-          ],
-        ),
+      drawer: AppDrawer(
+        selectedCollection: selectedCollection,
+        isPhotoAvailable: isPhotoAvailable,
+        isProfilePhotoVisible: _isProfilePhotoVisible,
+        fromDate: fromDate,
+        toDate: toDate,
+        profilePhotoUrl: profilePhotoUrl,
+        refreshCollections: refreshCollections,
+        setState: setState,
+        fetchMessages: fetchMessages,
+        setThemeMode: widget.setThemeMode,
+        themeMode: widget.themeMode,
+        picker: picker,
       ),
       body: Column(
         children: <Widget>[
@@ -366,29 +305,6 @@ class MessageSelectorState extends State<MessageSelector> {
               ],
             ),
           ),
-          if (_isProfilePhotoVisible && selectedCollection != null)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ProfilePhoto(
-                  collectionName: selectedCollection!,
-                  size: 60.0,
-                  isOnline: true,
-                  profilePhotoUrl: profilePhotoUrl,
-                ),
-                IconButton(
-                  icon:
-                      Icon(isPhotoAvailable ? Icons.delete : Icons.add_a_photo),
-                  onPressed: () {
-                    if (isPhotoAvailable) {
-                      PhotoHandler.deletePhoto(selectedCollection!, setState);
-                    } else {
-                      PhotoHandler.getImage(picker, setState);
-                    }
-                  },
-                ),
-              ],
-            ),
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -399,10 +315,8 @@ class MessageSelectorState extends State<MessageSelector> {
                     itemScrollController: itemScrollController,
                     itemPositionsListener: itemPositionsListener,
                     isSearchActive: isSearchVisible,
-                    selectedCollectionName:
-                        selectedCollection ?? '', // Add this line
-                    profilePhotoUrl:
-                        profilePhotoUrl, // Pass the profile photo URL
+                    selectedCollectionName: selectedCollection ?? '',
+                    profilePhotoUrl: profilePhotoUrl,
                   ),
           ),
         ],

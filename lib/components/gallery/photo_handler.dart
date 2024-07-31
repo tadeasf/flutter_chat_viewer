@@ -114,6 +114,7 @@ class PhotoHandler {
       if (kDebugMode) {
         print('Error deleting photo: $e');
       }
+      throw Exception('Failed to delete photo');
     }
   }
 }
