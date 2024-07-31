@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'components/message_list.dart';
 import 'components/api_service.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 void main() {
   runApp(const MyApp());
@@ -77,6 +78,9 @@ class _MessageSelectorState extends State<MessageSelector> {
   File? _image;
   final picker = ImagePicker();
   bool isPhotoAvailable = false;
+  final ItemScrollController itemScrollController = ItemScrollController();
+  final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
 
   List<int> searchResults = [];
   int currentSearchIndex = -1;
@@ -197,8 +201,12 @@ class _MessageSelectorState extends State<MessageSelector> {
   void _scrollToHighlightedMessage() {
     if (currentSearchIndex >= 0 && currentSearchIndex < searchResults.length) {
       final int messageIndex = searchResults[currentSearchIndex];
-      _scrollController.jumpTo(
-          messageIndex * 100.0); // Adjust based on your average item height
+      itemScrollController.scrollTo(
+        index: messageIndex,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        alignment: 0.0, // This will align the item to the top of the viewport
+      );
     }
   }
 
@@ -443,7 +451,8 @@ class _MessageSelectorState extends State<MessageSelector> {
                     messages: messages,
                     searchResults: searchResults,
                     currentSearchIndex: currentSearchIndex,
-                    scrollController: _scrollController,
+                    itemScrollController: itemScrollController,
+                    itemPositionsListener: itemPositionsListener,
                   ),
           ),
         ],
