@@ -112,7 +112,7 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
   Future<void> _fetchProfilePhoto() async {
     try {
       final requestUrl =
-          'https://secondary.dev.tadeasfort.com/messages/${widget.collectionName}/photo';
+          'https://backend.jevrej.cz/messages/${widget.collectionName}/photo';
       if (kDebugMode) {
         if (kDebugMode) {}
         print('Request URL: $requestUrl');

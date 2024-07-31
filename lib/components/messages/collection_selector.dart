@@ -24,15 +24,16 @@ class CollectionSelectorState extends State<CollectionSelector> {
   late List<Map<String, dynamic>> collections;
   late List<Map<String, dynamic>> filteredCollections;
   final TextEditingController searchController = TextEditingController();
-  int currentPage = 1;
   bool isLoadingMore = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    collections = widget.initialCollections;
-    filteredCollections = widget.initialCollections;
+    collections = widget.initialCollections
+        .where((collection) => collection['name'] != 'unified_collection')
+        .toList();
+    filteredCollections = collections;
     _scrollController.addListener(_scrollListener);
   }
 
@@ -56,12 +57,11 @@ class CollectionSelectorState extends State<CollectionSelector> {
         isLoadingMore = true;
       });
 
-      final newCollections = await loadMoreCollections(currentPage + 1, 20);
+      final newCollections = await loadMoreCollections();
 
       setState(() {
         collections.addAll(newCollections);
         filteredCollections = collections;
-        currentPage++;
         isLoadingMore = false;
       });
     }
@@ -80,7 +80,8 @@ class CollectionSelectorState extends State<CollectionSelector> {
     setState(() {
       filteredCollections = collections
           .where((collection) =>
-              collection['name'].toLowerCase().contains(query.toLowerCase()))
+              collection['name'].toLowerCase().contains(query.toLowerCase()) &&
+              collection['name'] != 'unified_collection')
           .toList();
     });
   }

@@ -24,8 +24,8 @@ class DatabaseManagerState extends State<DatabaseManager> {
 
   Future<void> fetchCurrentDb() async {
     try {
-      final response = await http
-          .get(Uri.parse('https://secondary.dev.tadeasfort.com/current_db'));
+      final response =
+          await http.get(Uri.parse('https://backend.jevrej.cz/current_db'));
       if (response.statusCode == 200) {
         setState(() {
           currentDb = response.body;
@@ -45,8 +45,8 @@ class DatabaseManagerState extends State<DatabaseManager> {
       isLoading = true;
     });
     try {
-      final response = await http
-          .get(Uri.parse('https://secondary.dev.tadeasfort.com/switch_db'));
+      final response =
+          await http.get(Uri.parse('https://backend.jevrej.cz/switch_db'));
       if (response.statusCode == 200) {
         await Future.delayed(
             const Duration(seconds: 30)); // Wait for 30 seconds

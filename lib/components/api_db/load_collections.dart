@@ -12,12 +12,16 @@ Future<void> loadCollections(
 
     if (cachedCollections != null) {
       final List<Map<String, dynamic>> collections =
-          List<Map<String, dynamic>>.from(json.decode(cachedCollections));
+          List<Map<String, dynamic>>.from(json.decode(cachedCollections))
+              .where((collection) => collection['name'] != 'unified_collection')
+              .toList();
       updateCollections(collections);
     }
 
-    // Fetch new collections (first page)
-    final loadedCollections = await ApiService.fetchCollectionsPaginated(1, 20);
+    // Fetch new collections
+    final loadedCollections = (await ApiService.fetchCollectionsPaginated())
+        .where((collection) => collection['name'] != 'unified_collection')
+        .toList();
     updateCollections(loadedCollections);
 
     // Cache the new collections
@@ -29,10 +33,11 @@ Future<void> loadCollections(
   }
 }
 
-Future<List<Map<String, dynamic>>> loadMoreCollections(
-    int page, int pageSize) async {
+Future<List<Map<String, dynamic>>> loadMoreCollections() async {
   try {
-    return await ApiService.fetchCollectionsPaginated(page, pageSize);
+    return (await ApiService.fetchCollectionsPaginated())
+        .where((collection) => collection['name'] != 'unified_collection')
+        .toList();
   } catch (e) {
     if (kDebugMode) {
       print('Error fetching more collections: $e');

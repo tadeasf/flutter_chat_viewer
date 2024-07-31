@@ -61,15 +61,15 @@ class MessageItemState extends State<MessageItem> {
       if (isInstagram) {
         if (widget.isAuthor) {
           return isDarkMode
-              ? Color(0xFF8A4F6D)
+              ? const Color(0xFF8A4F6D)
                   .withOpacity(0.3) // Lighter and less vibrant pinkish color
-              : Color(0xFF8A4F6D)
+              : const Color(0xFF8A4F6D)
                   .withOpacity(0.3); // Lighter and less vibrant pinkish color
         } else {
           return isDarkMode
-              ? Color(0xFF8A4F6D)
+              ? const Color(0xFF8A4F6D)
                   .withOpacity(0.6) // Darker and less vibrant pinkish color
-              : Color(0xFF8A4F6D)
+              : const Color(0xFF8A4F6D)
                   .withOpacity(0.6); // Darker and less vibrant pinkish color
         }
       }

@@ -4,7 +4,7 @@ import 'dart:io'; // Add this import for File
 import 'package:http_parser/http_parser.dart'; // Add this import for MediaType
 
 class ApiService {
-  static const String baseUrl = 'https://secondary.dev.tadeasfort.com';
+  static const String baseUrl = 'https://backend.jevrej.cz';
 
   static Future<List<Map<String, dynamic>>> fetchCollections() async {
     final response = await http.get(Uri.parse('$baseUrl/collections'));
@@ -95,11 +95,9 @@ class ApiService {
     return '$baseUrl/serve/photo/${Uri.encodeComponent(collectionName)}';
   }
 
-  // Add this method to ApiService class
-  static Future<List<Map<String, dynamic>>> fetchCollectionsPaginated(
-      int page, int pageSize) async {
-    final response = await http
-        .get(Uri.parse('$baseUrl/collections?page=$page&pageSize=$pageSize'));
+  // Update this method to fetch all collections without pagination
+  static Future<List<Map<String, dynamic>>> fetchCollectionsPaginated() async {
+    final response = await http.get(Uri.parse('$baseUrl/collections'));
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
       return data
