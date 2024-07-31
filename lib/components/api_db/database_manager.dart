@@ -71,24 +71,28 @@ class DatabaseManagerState extends State<DatabaseManager> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text('Current DB: $currentDb'),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          onPressed: isLoading ? null : switchDbAndFetch,
-          child: isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Text('Switch DB'),
-        ),
-      ],
+    return SizedBox(
+      height:
+          MediaQuery.of(context).size.height * 0.1, // 30% of the screen height
+      child: Column(
+        children: [
+          Text('Current DB: $currentDb'),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: isLoading ? null : switchDbAndFetch,
+            child: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text('Switch DB'),
+          ),
+        ],
+      ),
     );
   }
 }
