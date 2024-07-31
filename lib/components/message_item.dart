@@ -9,11 +9,11 @@ class MessageItem extends StatelessWidget {
   final bool isHighlighted;
 
   const MessageItem({
-    Key? key,
+    super.key,
     required this.message,
     required this.isAuthor,
     required this.isHighlighted,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +43,7 @@ class MessageItem extends StatelessWidget {
               : Colors.grey[400]!.withOpacity(0.5));
     }
 
-    Widget _buildMessageContent() {
+    Widget buildMessageContent() {
       if (message['photos'] != null && (message['photos'] as List).isNotEmpty) {
         final photoUrl = ApiService.getPhotoUrl(message['photos'][0]['uri']);
         return Column(
@@ -120,7 +120,7 @@ class MessageItem extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            _buildMessageContent(),
+            buildMessageContent(),
             const SizedBox(height: 4),
             Text(
               DateFormat('yyyy-MM-dd HH:mm').format(
@@ -141,7 +141,7 @@ class MessageItem extends StatelessWidget {
 class PhotoViewScreen extends StatelessWidget {
   final String imageUrl;
 
-  const PhotoViewScreen({Key? key, required this.imageUrl}) : super(key: key);
+  const PhotoViewScreen({super.key, required this.imageUrl});
 
   @override
   Widget build(BuildContext context) {

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async';
 import 'components/message_list.dart';
 import 'components/api_service.dart';
+import 'components/theme_manager.dart';
+import 'components/date_selector.dart';
+import 'components/photo_handler.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import 'package:flutter/material.dart';
-import 'components/photo_gallery.dart';
+import 'dart:async';
+import 'dart:io';
 
 void main() {
   runApp(const MyApp());
@@ -27,23 +27,18 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _loadThemeMode();
-  }
-
-  void _loadThemeMode() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _themeMode =
-          ThemeMode.values[prefs.getInt('themeMode') ?? ThemeMode.system.index];
+    ThemeManager.loadThemeMode().then((mode) {
+      setState(() {
+        _themeMode = mode;
+      });
     });
   }
 
-  void _setThemeMode(ThemeMode mode) async {
+  void _setThemeMode(ThemeMode mode) {
     setState(() {
       _themeMode = mode;
     });
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('themeMode', mode.index);
+    ThemeManager.saveThemeMode(mode);
   }
 
   @override
@@ -142,63 +137,6 @@ class _MessageSelectorState extends State<MessageSelector> {
     }
   }
 
-  Future<void> handleShowAllPhotos() async {
-    if (selectedCollection == null) return;
-
-    setState(() {
-      isGalleryLoading = true;
-    });
-
-    try {
-      final photoData = await ApiService.fetchPhotos(selectedCollection!);
-      final photoUrls = photoData
-          .expand((msg) => (msg['photos'] as List)
-              .map((photo) => ApiService.getPhotoUrl(photo['uri'])))
-          .toList();
-
-      setState(() {
-        galleryPhotos = photoUrls;
-        isGalleryLoading = false;
-      });
-
-      // Navigate to the PhotoGallery
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PhotoGallery(photos: galleryPhotos),
-        ),
-      );
-    } catch (error) {
-      print('Failed to fetch photo data: $error');
-      setState(() {
-        isGalleryLoading = false;
-      });
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context, bool isFromDate) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: isFromDate
-          ? (fromDate ?? DateTime.now())
-          : (toDate ?? DateTime.now()),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2025),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isFromDate) {
-          fromDate = picked;
-        } else {
-          toDate = picked;
-        }
-      });
-      if (selectedCollection != null) {
-        fetchMessages();
-      }
-    }
-  }
-
   void searchMessages(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -259,88 +197,6 @@ class _MessageSelectorState extends State<MessageSelector> {
     _scrollToHighlightedMessage();
   }
 
-  Future<void> _uploadImage() async {
-    if (_image == null || selectedCollection == null) return;
-
-    try {
-      await ApiService.uploadPhoto(selectedCollection!, _image!);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Photo uploaded successfully')));
-      checkPhotoAvailability();
-    } catch (e) {
-      print('Error uploading photo: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Error uploading photo')));
-    }
-  }
-
-  Future<void> _getImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      }
-    });
-  }
-
-  Future<void> checkPhotoAvailability() async {
-    if (selectedCollection == null) return;
-
-    try {
-      final isAvailable =
-          await ApiService.checkPhotoAvailability(selectedCollection!);
-      setState(() {
-        isPhotoAvailable = isAvailable;
-      });
-    } catch (e) {
-      print('Error checking photo availability: $e');
-    }
-  }
-
-  void _showSettingsDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Settings'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Theme Mode'),
-              DropdownButton<ThemeMode>(
-                value: widget.themeMode,
-                onChanged: (ThemeMode? newValue) {
-                  if (newValue != null) {
-                    widget.setThemeMode(newValue);
-                    Navigator.of(context).pop();
-                  }
-                },
-                items: ThemeMode.values.map((ThemeMode mode) {
-                  return DropdownMenuItem<ThemeMode>(
-                    value: mode,
-                    child: Text(mode.toString().split('.').last),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -382,30 +238,39 @@ class _MessageSelectorState extends State<MessageSelector> {
               title: const Text('Display All Images'),
               onTap: () {
                 Navigator.pop(context);
-                handleShowAllPhotos();
+                PhotoHandler.handleShowAllPhotos(
+                  context,
+                  selectedCollection,
+                  setState,
+                  galleryPhotos,
+                  isGalleryLoading,
+                );
               },
             ),
             ListTile(
               title: Text(
                   'From Date: ${fromDate != null ? DateFormat('yyyy-MM-dd').format(fromDate!) : 'Not set'}'),
-              onTap: () => _selectDate(context, true),
+              onTap: () => DateSelector.selectDate(context, true, fromDate,
+                  toDate, setState, selectedCollection, fetchMessages),
             ),
             ListTile(
               title: Text(
                   'To Date: ${toDate != null ? DateFormat('yyyy-MM-dd').format(toDate!) : 'Not set'}'),
-              onTap: () => _selectDate(context, false),
+              onTap: () => DateSelector.selectDate(context, false, fromDate,
+                  toDate, setState, selectedCollection, fetchMessages),
             ),
             ListTile(
               title: const Text('Select Photo'),
               onTap: () {
-                _getImage();
+                PhotoHandler.getImage(picker, setState);
                 Navigator.pop(context);
               },
             ),
             ListTile(
               title: const Text('Upload Photo'),
               onTap: () {
-                _uploadImage();
+                PhotoHandler.uploadImage(
+                    context, _image, selectedCollection, setState);
                 Navigator.pop(context);
               },
             ),
@@ -414,7 +279,8 @@ class _MessageSelectorState extends State<MessageSelector> {
               title: const Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
-                _showSettingsDialog();
+                ThemeManager.showSettingsDialog(
+                    context, widget.themeMode, widget.setThemeMode);
               },
             ),
           ],
@@ -438,7 +304,8 @@ class _MessageSelectorState extends State<MessageSelector> {
                     setState(() {
                       selectedCollection = newValue;
                     });
-                    checkPhotoAvailability();
+                    PhotoHandler.checkPhotoAvailability(
+                        selectedCollection, setState);
                     fetchMessages();
                   },
                   items:

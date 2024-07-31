@@ -7,7 +7,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 class PhotoGallery extends StatelessWidget {
   final List<dynamic> photos;
 
-  const PhotoGallery({Key? key, required this.photos}) : super(key: key);
+  const PhotoGallery({super.key, required this.photos});
 
   @override
   Widget build(BuildContext context) {
