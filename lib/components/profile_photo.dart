@@ -2,51 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'components/message_selector.dart';
-import 'components/theme_manager.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.system;
-
-  @override
-  void initState() {
-    super.initState();
-    ThemeManager.loadThemeMode().then((mode) {
-      setState(() {
-        _themeMode = mode;
-      });
-    });
-  }
-
-  void _setThemeMode(ThemeMode mode) {
-    setState(() {
-      _themeMode = mode;
-    });
-    ThemeManager.saveThemeMode(mode);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Chat Viewer',
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      themeMode: _themeMode,
-      home: MessageSelector(setThemeMode: _setThemeMode, themeMode: _themeMode),
-    );
-  }
-}
 
 class ProfilePhoto extends StatefulWidget {
   final String collectionName;
@@ -78,7 +33,6 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
   Future<void> _loadCachedPhoto() async {
     final prefs = await SharedPreferences.getInstance();
     final cachedUrl = prefs.getString('profile_photo_${widget.collectionName}');
-    print('Cached URL: $cachedUrl');
     if (cachedUrl != null) {
       setState(() {
         _imageUrl = cachedUrl;
@@ -90,13 +44,11 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
   }
 
   Future<void> _fetchProfilePhoto() async {
-    final url =
-        'https://secondary.dev.tadeasfort.com/messages/${widget.collectionName}/photo';
-    print('Fetching URL: $url');
     try {
-      final response = await http.get(Uri.parse(url));
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      final response = await http.get(
+        Uri.parse(
+            'https://secondary.dev.tadeasfort.com/messages/${widget.collectionName}/photo'),
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -126,7 +78,6 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
         }
       }
     } catch (e) {
-      print('Error fetching profile photo: $e');
       if (mounted) {
         setState(() {
           _isError = true;

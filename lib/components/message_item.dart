@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
 import '../components/api_service.dart';
+import 'profile_photo.dart'; // Import ProfilePhoto
 
 class MessageItem extends StatefulWidget {
   final Map<String, dynamic> message;
@@ -139,12 +140,23 @@ class _MessageItemState extends State<MessageItem> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.message['sender_name'] ?? 'Unknown sender',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: getTextColor(),
-                ),
+              Row(
+                children: [
+                  ProfilePhoto(
+                    collectionName:
+                        widget.message['sender_collection_name'] ?? '',
+                    size: 40.0,
+                    isOnline: widget.message['is_online'] ?? false,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.message['sender_name'] ?? 'Unknown sender',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: getTextColor(),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               buildMessageContent(),
