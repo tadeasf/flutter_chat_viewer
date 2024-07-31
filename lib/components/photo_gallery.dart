@@ -1,8 +1,7 @@
 // components/photo_gallery.dart
 
 import 'package:flutter/material.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
+import 'photo_view_screen.dart'; // Ensure this import is correct
 
 class PhotoGallery extends StatelessWidget {
   final List<dynamic> photos;
@@ -15,26 +14,48 @@ class PhotoGallery extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Photo Gallery'),
       ),
-      body: PhotoViewGallery.builder(
+      body: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 4,
+          crossAxisSpacing: 4,
+        ),
         itemCount: photos.length,
-        builder: (context, index) {
-          return PhotoViewGalleryPageOptions(
-            imageProvider: NetworkImage(photos[index]),
-            minScale: PhotoViewComputedScale.contained * 0.8,
-            maxScale: PhotoViewComputedScale.covered * 2,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      PhotoViewScreen(imageUrl: photos[index]),
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                photos[index],
+                fit: BoxFit.cover,
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return const Text('Failed to load image');
+                },
+              ),
+            ),
           );
         },
-        scrollPhysics: const BouncingScrollPhysics(),
-        backgroundDecoration: BoxDecoration(
-          color: Theme.of(context).canvasColor,
-        ),
-        loadingBuilder: (context, event) => Center(
-          child: CircularProgressIndicator(
-            value: event == null
-                ? 0
-                : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
-          ),
-        ),
       ),
     );
   }

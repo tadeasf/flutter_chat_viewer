@@ -46,6 +46,7 @@ class _MessageSelectorState extends State<MessageSelector> {
   bool isSearchVisible = false;
   final ScrollController _scrollController = ScrollController();
   Timer? _debounce;
+  bool isSearchActive = false; // Added this flag
 
   @override
   void initState() {
@@ -142,6 +143,7 @@ class _MessageSelectorState extends State<MessageSelector> {
                   searchController.clear();
                   searchResults.clear();
                   currentSearchIndex = -1;
+                  isSearchActive = false; // Set to false when search is closed
                 }
               });
             },
@@ -265,7 +267,8 @@ class _MessageSelectorState extends State<MessageSelector> {
                               messages,
                               _performSearch,
                               searchResults,
-                              currentSearchIndex),
+                              currentSearchIndex,
+                              isSearchActive), // Pass the flag here
                         ),
                       ),
                       IconButton(
@@ -302,6 +305,7 @@ class _MessageSelectorState extends State<MessageSelector> {
                     currentSearchIndex: currentSearchIndex,
                     itemScrollController: itemScrollController,
                     itemPositionsListener: itemPositionsListener,
+                    isSearchActive: isSearchVisible, // Pass the flag here
                   ),
           ),
         ],

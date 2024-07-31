@@ -1,3 +1,6 @@
+// TODO: profile photo styling
+// TODO: add searching photo functionality
+// TODO: gallery: add masonry view
 import 'package:flutter/material.dart';
 import 'components/theme_manager.dart';
 import 'components/message_selector.dart'; // Import MessageSelector

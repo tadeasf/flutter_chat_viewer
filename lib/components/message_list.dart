@@ -9,6 +9,7 @@ class MessageList extends StatelessWidget {
   final int currentSearchIndex;
   final ItemScrollController itemScrollController;
   final ItemPositionsListener itemPositionsListener;
+  final bool isSearchActive; // Add this flag
 
   const MessageList({
     super.key,
@@ -17,13 +18,16 @@ class MessageList extends StatelessWidget {
     required this.currentSearchIndex,
     required this.itemScrollController,
     required this.itemPositionsListener,
+    required this.isSearchActive, // Add this flag
   });
 
   @override
   Widget build(BuildContext context) {
     // Debug prints to check searchResults and currentSearchIndex
-    print('Search Results: $searchResults');
-    print('Current Search Index: $currentSearchIndex');
+    if (isSearchActive) {
+      print('Search Results: $searchResults');
+      print('Current Search Index: $currentSearchIndex');
+    }
 
     return ScrollConfiguration(
       behavior: CustomScrollBehavior(),
@@ -31,10 +35,13 @@ class MessageList extends StatelessWidget {
         itemCount: messages.length,
         itemBuilder: (context, index) {
           final message = messages[index];
-          final isHighlighted = searchResults.contains(index) &&
+          final isHighlighted = isSearchActive &&
+              searchResults.contains(index) &&
               searchResults.indexOf(index) == currentSearchIndex;
           // Debug print to check isHighlighted value
-          print('Message at index $index is highlighted: $isHighlighted');
+          if (isSearchActive) {
+            print('Message at index $index is highlighted: $isHighlighted');
+          }
           return MessageItem(
             message: message,
             isAuthor: message['sender_name'] == 'Tadeáš Fořt',
