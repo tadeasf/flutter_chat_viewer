@@ -93,4 +93,16 @@ class PhotoHandler {
       print('Error checking photo availability: $e');
     }
   }
+
+  static Future<void> deletePhoto(
+      String collectionName, Function setState) async {
+    try {
+      await ApiService.deletePhoto(collectionName);
+      setState(() {
+        isPhotoAvailable = false;
+      });
+    } catch (e) {
+      print('Error deleting photo: $e');
+    }
+  }
 }

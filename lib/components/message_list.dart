@@ -9,7 +9,8 @@ class MessageList extends StatelessWidget {
   final int currentSearchIndex;
   final ItemScrollController itemScrollController;
   final ItemPositionsListener itemPositionsListener;
-  final bool isSearchActive; // Add this flag
+  final bool isSearchActive;
+  final String selectedCollectionName;
 
   const MessageList({
     super.key,
@@ -18,12 +19,12 @@ class MessageList extends StatelessWidget {
     required this.currentSearchIndex,
     required this.itemScrollController,
     required this.itemPositionsListener,
-    required this.isSearchActive, // Add this flag
+    required this.isSearchActive,
+    required this.selectedCollectionName,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Debug prints to check searchResults and currentSearchIndex
     if (isSearchActive) {
       print('Search Results: $searchResults');
       print('Current Search Index: $currentSearchIndex');
@@ -38,7 +39,6 @@ class MessageList extends StatelessWidget {
           final isHighlighted = isSearchActive &&
               searchResults.contains(index) &&
               searchResults.indexOf(index) == currentSearchIndex;
-          // Debug print to check isHighlighted value
           if (isSearchActive) {
             print('Message at index $index is highlighted: $isHighlighted');
           }
@@ -46,6 +46,7 @@ class MessageList extends StatelessWidget {
             message: message,
             isAuthor: message['sender_name'] == 'Tadeáš Fořt',
             isHighlighted: isHighlighted,
+            selectedCollectionName: selectedCollectionName,
           );
         },
         itemScrollController: itemScrollController,

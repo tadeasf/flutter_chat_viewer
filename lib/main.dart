@@ -72,6 +72,7 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
   @override
   void initState() {
     super.initState();
+    print('Collection Name: ${widget.collectionName}'); // Debug print
     _loadCachedPhoto();
   }
 
@@ -90,14 +91,15 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
   }
 
   Future<void> _fetchProfilePhoto() async {
-    final url =
-        'https://secondary.dev.tadeasfort.com/messages/${widget.collectionName}/photo';
-    print('Fetching URL: $url');
     try {
-      final response = await http.get(Uri.parse(url));
+      final requestUrl =
+          'https://secondary.dev.tadeasfort.com/messages/${widget.collectionName}/photo';
+      print('Request URL: $requestUrl');
+      final response = await http.get(
+        Uri.parse(requestUrl),
+      );
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['isPhotoAvailable'] == true && data['photoUrl'] != null) {
@@ -126,7 +128,6 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
         }
       }
     } catch (e) {
-      print('Error fetching profile photo: $e');
       if (mounted) {
         setState(() {
           _isError = true;

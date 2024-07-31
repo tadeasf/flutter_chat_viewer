@@ -13,6 +13,7 @@ import 'date_selector.dart';
 import 'theme_manager.dart';
 import 'message_list.dart';
 import 'scroll_to_highlighted_message.dart';
+import 'profile_photo.dart'; // Import ProfilePhoto
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -128,6 +129,17 @@ class _MessageSelectorState extends State<MessageSelector> {
     );
   }
 
+  Future<void> _changeCollection(String? newValue) async {
+    setState(() {
+      selectedCollection = newValue;
+    });
+    if (selectedCollection != null) {
+      await PhotoHandler.checkPhotoAvailability(selectedCollection, setState);
+      await fetchMessages(selectedCollection, fromDate, toDate, setState,
+          setLoading, setMessages);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -232,15 +244,7 @@ class _MessageSelectorState extends State<MessageSelector> {
                   value: selectedCollection,
                   isExpanded: true,
                   hint: const Text('Select a collection'),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedCollection = newValue;
-                    });
-                    PhotoHandler.checkPhotoAvailability(
-                        selectedCollection, setState);
-                    fetchMessages(selectedCollection, fromDate, toDate,
-                        setState, setLoading, setMessages);
-                  },
+                  onChanged: _changeCollection,
                   items:
                       collections.map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
@@ -296,6 +300,28 @@ class _MessageSelectorState extends State<MessageSelector> {
               ],
             ),
           ),
+          if (selectedCollection != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ProfilePhoto(
+                  collectionName: selectedCollection!,
+                  size: 60.0,
+                  isOnline: true,
+                ),
+                IconButton(
+                  icon:
+                      Icon(isPhotoAvailable ? Icons.delete : Icons.add_a_photo),
+                  onPressed: () {
+                    if (isPhotoAvailable) {
+                      PhotoHandler.deletePhoto(selectedCollection!, setState);
+                    } else {
+                      PhotoHandler.getImage(picker, setState);
+                    }
+                  },
+                ),
+              ],
+            ),
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -305,7 +331,9 @@ class _MessageSelectorState extends State<MessageSelector> {
                     currentSearchIndex: currentSearchIndex,
                     itemScrollController: itemScrollController,
                     itemPositionsListener: itemPositionsListener,
-                    isSearchActive: isSearchVisible, // Pass the flag here
+                    isSearchActive: isSearchVisible,
+                    selectedCollectionName:
+                        selectedCollection ?? '', // Add this line
                   ),
           ),
         ],

@@ -76,4 +76,17 @@ class ApiService {
     final processedUri = uri.replaceFirst('messages/inbox/', '');
     return '$baseUrl/inbox/$processedUri';
   }
+
+  static Future<void> deletePhoto(String collectionName) async {
+    final url = Uri.parse(
+        '$baseUrl/delete/photo/${Uri.encodeComponent(collectionName)}');
+    final response = await http.delete(url);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete photo');
+    }
+  }
+
+  static String getProfilePhotoUrl(String collectionName) {
+    return '$baseUrl/serve/photo/${Uri.encodeComponent(collectionName)}';
+  }
 }

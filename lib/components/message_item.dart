@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
 import '../components/api_service.dart';
-import 'profile_photo.dart'; // Import ProfilePhoto
+import 'message_profile_photo.dart';
 
 class MessageItem extends StatefulWidget {
   final Map<String, dynamic> message;
   final bool isAuthor;
   final bool isHighlighted;
+  final String selectedCollectionName;
 
   const MessageItem({
     super.key,
     required this.message,
     required this.isAuthor,
     required this.isHighlighted,
+    required this.selectedCollectionName,
   });
 
   @override
@@ -142,12 +144,13 @@ class _MessageItemState extends State<MessageItem> {
             children: [
               Row(
                 children: [
-                  ProfilePhoto(
-                    collectionName:
-                        widget.message['sender_collection_name'] ?? '',
-                    size: 40.0,
-                    isOnline: widget.message['is_online'] ?? false,
-                  ),
+                  if (!widget
+                      .isAuthor) // Only show profile photo for non-authors
+                    MessageProfilePhoto(
+                      collectionName: widget.selectedCollectionName,
+                      size: 40.0,
+                      isOnline: widget.message['is_online'] ?? false,
+                    ),
                   const SizedBox(width: 8),
                   Text(
                     widget.message['sender_name'] ?? 'Unknown sender',
