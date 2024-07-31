@@ -8,10 +8,10 @@ import 'load_collections.dart';
 import 'fetch_messages.dart';
 import 'search_messages.dart';
 import 'navigate_search.dart';
-import 'photo_handler.dart'; // Ensure PhotoHandler is imported
-import 'date_selector.dart'; // Ensure DateSelector is imported
-import 'theme_manager.dart'; // Ensure ThemeManager is imported
-import 'message_list.dart'; // Ensure MessageList is imported
+import 'photo_handler.dart';
+import 'date_selector.dart';
+import 'theme_manager.dart';
+import 'message_list.dart';
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -49,7 +49,11 @@ class _MessageSelectorState extends State<MessageSelector> {
   @override
   void initState() {
     super.initState();
-    loadCollections(setState, collections);
+    loadCollections((loadedCollections) {
+      setState(() {
+        collections = loadedCollections;
+      });
+    });
   }
 
   @override
@@ -69,6 +73,12 @@ class _MessageSelectorState extends State<MessageSelector> {
   void setMessages(List<dynamic> loadedMessages) {
     setState(() {
       messages = loadedMessages;
+    });
+  }
+
+  void updateCurrentSearchIndex(int index) {
+    setState(() {
+      currentSearchIndex = index;
     });
   }
 

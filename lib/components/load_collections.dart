@@ -1,12 +1,9 @@
 import 'api_service.dart';
 
-Future<void> loadCollections(
-    Function setState, List<String> collections) async {
+Future<void> loadCollections(Function(List<String>) updateCollections) async {
   try {
     final loadedCollections = await ApiService.fetchCollections();
-    setState(() {
-      collections = loadedCollections;
-    });
+    updateCollections(loadedCollections);
   } catch (e) {
     print('Error fetching collections: $e');
   }
