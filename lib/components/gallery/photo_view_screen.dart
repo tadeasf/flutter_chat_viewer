@@ -45,32 +45,39 @@ class PhotoViewScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () => _downloadImage(context),
+      ),
+      body: Stack(
+        children: [
+          PhotoView(
+            imageProvider: NetworkImage(imageUrl),
+            minScale: PhotoViewComputedScale.contained * 0.8,
+            maxScale: PhotoViewComputedScale.covered * 2,
+            backgroundDecoration: const BoxDecoration(
+              color: Colors.black,
+            ),
+            loadingBuilder: (context, event) => Center(
+              child: CircularProgressIndicator(
+                value: event == null
+                    ? 0
+                    : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+              ),
+            ),
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(
+                  child: Text('Failed to load image',
+                      style: TextStyle(color: Colors.white)));
+            },
+          ),
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: FloatingActionButton(
+              onPressed: () => _downloadImage(context),
+              backgroundColor: Colors.black.withOpacity(0.7),
+              child: const Icon(Icons.download, color: Colors.white),
+            ),
           ),
         ],
-      ),
-      body: PhotoView(
-        imageProvider: NetworkImage(imageUrl),
-        minScale: PhotoViewComputedScale.contained * 0.8,
-        maxScale: PhotoViewComputedScale.covered * 2,
-        backgroundDecoration: const BoxDecoration(
-          color: Colors.black,
-        ),
-        loadingBuilder: (context, event) => Center(
-          child: CircularProgressIndicator(
-            value: event == null
-                ? 0
-                : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
-          ),
-        ),
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-              child: Text('Failed to load image',
-                  style: TextStyle(color: Colors.white)));
-        },
       ),
     );
   }
