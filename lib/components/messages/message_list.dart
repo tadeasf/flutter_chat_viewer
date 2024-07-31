@@ -16,7 +16,7 @@ class MessageList extends StatelessWidget {
   final Function(String collectionName, int timestamp) onMessageTap;
 
   const MessageList({
-    Key? key,
+    super.key,
     required this.messages,
     required this.searchResults,
     required this.currentSearchIndex,
@@ -27,7 +27,7 @@ class MessageList extends StatelessWidget {
     required this.profilePhotoUrl,
     required this.isCrossCollectionSearch,
     required this.onMessageTap,
-  }) : super(key: key);
+  });
 
   Map<String, dynamic> _ensureStringDynamicMap(dynamic item) {
     if (item is Map<String, dynamic>) {
