@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import 'dart:async';
 import '../api_db/load_collections.dart';
 import 'fetch_messages.dart';
 import '../search/search_messages.dart';
@@ -213,6 +213,42 @@ class MessageSelectorState extends State<MessageSelector> {
     }
   }
 
+  Future<void> _navigateToMessage(String collectionName, int timestamp) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    if (collectionName != selectedCollection) {
+      await _changeCollection(collectionName);
+    }
+
+    // Reset cross-collection search state
+    setState(() {
+      isCrossCollectionSearch = false;
+      crossCollectionMessages = [];
+    });
+
+    // Wait for the messages to load
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Find the index of the message with the given timestamp
+    final messageIndex =
+        messages.indexWhere((message) => message['timestamp_ms'] == timestamp);
+
+    if (messageIndex != -1) {
+      itemScrollController.scrollTo(
+        index: messageIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        alignment: 0.3, // Scroll to slightly above the middle of the viewport
+      );
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -255,6 +291,7 @@ class MessageSelectorState extends State<MessageSelector> {
                     selectedCollectionName: selectedCollection ?? '',
                     profilePhotoUrl: profilePhotoUrl,
                     isCrossCollectionSearch: isCrossCollectionSearch,
+                    onMessageTap: _navigateToMessage,
                   ),
           ),
           if (isCollectionSelectorVisible || selectedCollection == null)

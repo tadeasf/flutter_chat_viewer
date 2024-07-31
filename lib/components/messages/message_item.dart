@@ -12,6 +12,7 @@ class MessageItem extends StatefulWidget {
   final String selectedCollectionName;
   final String? profilePhotoUrl;
   final bool isCrossCollectionSearch;
+  final Function(String collectionName, int timestamp) onMessageTap;
 
   const MessageItem({
     super.key,
@@ -21,6 +22,7 @@ class MessageItem extends StatefulWidget {
     required this.selectedCollectionName,
     this.profilePhotoUrl,
     required this.isCrossCollectionSearch,
+    required this.onMessageTap,
   });
 
   @override
@@ -167,97 +169,107 @@ class MessageItemState extends State<MessageItem> {
       }
     }
 
-    return Align(
-      alignment: widget.isAuthor ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(
-          top: 4,
-          bottom: 4,
-          left: widget.isAuthor ? 64 : 8,
-          right: widget.isAuthor ? 8 : 64,
-        ),
-        child: Column(
-          crossAxisAlignment: widget.isAuthor
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            if (!widget.isAuthor || widget.isCrossCollectionSearch)
-              Padding(
-                padding: const EdgeInsets.only(left: 8, bottom: 4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    MessageProfilePhoto(
-                      collectionName: widget.isCrossCollectionSearch
-                          ? widget.message['collectionName']
-                          : widget.selectedCollectionName,
-                      size: 24.0,
-                      isOnline: widget.message['is_online'] ?? false,
-                      profilePhotoUrl: widget.profilePhotoUrl,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _ensureDecoded(
-                          widget.message['sender_name'] ?? 'Unknown sender'),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: isDarkMode ? subtext1 : Colors.grey[700],
+    return GestureDetector(
+      onLongPress: () {
+        final collectionName = widget.isCrossCollectionSearch
+            ? widget.message['collectionName'] ?? widget.selectedCollectionName
+            : widget.selectedCollectionName;
+        final timestamp = widget.message['timestamp_ms'] as int? ?? 0;
+        widget.onMessageTap(collectionName, timestamp);
+      },
+      child: Align(
+        alignment:
+            widget.isAuthor ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: EdgeInsets.only(
+            top: 4,
+            bottom: 4,
+            left: widget.isAuthor ? 64 : 8,
+            right: widget.isAuthor ? 8 : 64,
+          ),
+          child: Column(
+            crossAxisAlignment: widget.isAuthor
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              if (!widget.isAuthor || widget.isCrossCollectionSearch)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, bottom: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      MessageProfilePhoto(
+                        collectionName: widget.isCrossCollectionSearch
+                            ? widget.message['collectionName']
+                            : widget.selectedCollectionName,
+                        size: 24.0,
+                        isOnline: widget.message['is_online'] ?? false,
+                        profilePhotoUrl: widget.profilePhotoUrl,
                       ),
-                    ),
-                    if (widget.isCrossCollectionSearch)
+                      const SizedBox(width: 8),
                       Text(
-                        ' (${_ensureDecoded(widget.message['collectionName'] ?? 'Unknown collection')})',
+                        _ensureDecoded(
+                            widget.message['sender_name'] ?? 'Unknown sender'),
                         style: TextStyle(
-                          fontSize: 12,
-                          color: isDarkMode ? subtext1 : Colors.grey[500],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: isDarkMode ? subtext1 : Colors.grey[700],
                         ),
                       ),
-                  ],
-                ),
-              ),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isExpanded = !_isExpanded;
-                });
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: getBubbleColor(),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    buildMessageContent(),
-                    if (_isExpanded) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat('yyyy-MM-dd HH:mm').format(
-                          DateTime.fromMillisecondsSinceEpoch(
-                              widget.message['timestamp_ms']),
+                      if (widget.isCrossCollectionSearch)
+                        Text(
+                          ' (${_ensureDecoded(widget.message['collectionName'] ?? 'Unknown collection')})',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDarkMode ? subtext1 : Colors.grey[500],
+                          ),
                         ),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: getTextColor().withOpacity(0.7),
-                        ),
+                    ],
+                  ),
+                ),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                  });
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: getBubbleColor(),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
                       ),
                     ],
-                  ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      buildMessageContent(),
+                      if (_isExpanded) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('yyyy-MM-dd HH:mm').format(
+                            DateTime.fromMillisecondsSinceEpoch(
+                                widget.message['timestamp_ms']),
+                          ),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: getTextColor().withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

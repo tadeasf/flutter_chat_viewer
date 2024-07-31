@@ -13,9 +13,10 @@ class MessageList extends StatelessWidget {
   final String selectedCollectionName;
   final String? profilePhotoUrl;
   final bool isCrossCollectionSearch;
+  final Function(String collectionName, int timestamp) onMessageTap;
 
   const MessageList({
-    super.key,
+    Key? key,
     required this.messages,
     required this.searchResults,
     required this.currentSearchIndex,
@@ -25,7 +26,8 @@ class MessageList extends StatelessWidget {
     required this.selectedCollectionName,
     required this.profilePhotoUrl,
     required this.isCrossCollectionSearch,
-  });
+    required this.onMessageTap,
+  }) : super(key: key);
 
   Map<String, dynamic> _ensureStringDynamicMap(dynamic item) {
     if (item is Map<String, dynamic>) {
@@ -56,6 +58,7 @@ class MessageList extends StatelessWidget {
             selectedCollectionName: selectedCollectionName,
             profilePhotoUrl: profilePhotoUrl,
             isCrossCollectionSearch: isCrossCollectionSearch,
+            onMessageTap: onMessageTap,
           );
         },
         itemScrollController: itemScrollController,
