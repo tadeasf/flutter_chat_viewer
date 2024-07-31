@@ -1,6 +1,7 @@
 import 'api_service.dart';
 
-Future<void> loadCollections(Function(List<String>) updateCollections) async {
+Future<void> loadCollections(
+    Function(List<Map<String, dynamic>>) updateCollections) async {
   try {
     final loadedCollections = await ApiService.fetchCollections();
     updateCollections(loadedCollections);
