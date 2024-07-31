@@ -7,15 +7,14 @@ import 'dart:io';
 import 'load_collections.dart';
 import 'fetch_messages.dart';
 import 'search_messages.dart';
-import 'navigate_search.dart';
 import 'photo_handler.dart';
 import 'date_selector.dart';
 import 'theme_manager.dart';
 import 'message_list.dart';
-import 'scroll_to_highlighted_message.dart';
 import 'profile_photo.dart'; // Import ProfilePhoto
 import 'profile_photo_manager.dart'; // Add this import
 import 'database_manager.dart'; // Add this import
+import 'navigate_search.dart'; // Add this import
 
 class MessageSelector extends StatefulWidget {
   final Function(ThemeMode) setThemeMode;
@@ -106,33 +105,38 @@ class _MessageSelectorState extends State<MessageSelector> {
     });
   }
 
-  void _performSearch(String query) {
-    setState(() {
-      searchResults = messages
-          .asMap()
-          .entries
-          .where((entry) {
-            final message = entry.value;
-            final content = message['content']?.toLowerCase() ?? '';
-            final senderName = message['sender_name']?.toLowerCase() ?? '';
-            return content.contains(query.toLowerCase()) ||
-                senderName.contains(query.toLowerCase());
-          })
-          .map((e) => e.key)
-          .toList();
-      currentSearchIndex = searchResults.isNotEmpty ? 0 : -1;
-    });
-
-    if (searchResults.isNotEmpty) {
-      _scrollToHighlightedMessage();
-    }
+  void _scrollToHighlightedMessage(int index) {
+    itemScrollController.scrollTo(
+      index: index,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOutCubic,
+      alignment: 0.0,
+    );
   }
 
-  void _scrollToHighlightedMessage() {
-    scrollToHighlightedMessage(
-      currentSearchIndex,
-      searchResults,
-      itemScrollController,
+  void _performSearch(String query) {
+    searchMessages(
+      query,
+      _debounce,
+      setState,
+      messages,
+      _scrollToHighlightedMessage,
+      (List<int> results) {
+        setState(() {
+          searchResults = results;
+        });
+      },
+      (int index) {
+        setState(() {
+          currentSearchIndex = index;
+        });
+      },
+      (bool active) {
+        setState(() {
+          isSearchActive = active;
+        });
+      },
+      selectedCollection,
     );
   }
 
@@ -141,12 +145,12 @@ class _MessageSelectorState extends State<MessageSelector> {
       direction,
       searchResults,
       currentSearchIndex,
-      (index) {
+      (int index) {
         setState(() {
           currentSearchIndex = index;
         });
       },
-      _scrollToHighlightedMessage,
+      () => _scrollToHighlightedMessage(searchResults[currentSearchIndex]),
     );
   }
 
@@ -334,15 +338,7 @@ class _MessageSelectorState extends State<MessageSelector> {
                             labelText: 'Search messages',
                             suffixIcon: Icon(Icons.search),
                           ),
-                          onChanged: (query) => searchMessages(
-                              query,
-                              _debounce,
-                              setState,
-                              messages,
-                              _performSearch,
-                              searchResults,
-                              currentSearchIndex,
-                              isSearchActive), // Pass the flag here
+                          onChanged: _performSearch,
                         ),
                       ),
                       IconButton(
