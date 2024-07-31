@@ -1,26 +1,56 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:diacritic/diacritic.dart';
 
 void searchMessages(
     String query,
     Timer? debounce,
     Function setState,
     List<dynamic> messages,
-    Function performSearch,
-    List<int> searchResults,
-    int currentSearchIndex,
-    bool isSearchActive) {
+    Function scrollToHighlightedMessage,
+    Function updateSearchResults,
+    Function updateCurrentSearchIndex,
+    Function updateIsSearchActive,
+    String? selectedCollection) {
   if (debounce?.isActive ?? false) debounce!.cancel();
   debounce = Timer(const Duration(milliseconds: 500), () {
     if (query.isEmpty) {
       setState(() {
-        searchResults.clear();
-        currentSearchIndex = -1;
-        isSearchActive = false;
+        updateSearchResults([]);
+        updateCurrentSearchIndex(-1);
+        updateIsSearchActive(false);
       });
     } else {
-      performSearch(query);
-      isSearchActive = true;
+      final normalizedQuery = removeDiacritics(query.toLowerCase());
+      List<int> newSearchResults = [];
+
+      for (int i = 0; i < messages.length; i++) {
+        final currentMessage = messages[i];
+        final normalizedMessageContent = currentMessage['content'] != null
+            ? removeDiacritics(currentMessage['content'].toLowerCase())
+            : "";
+
+        if (normalizedMessageContent.contains(normalizedQuery) ||
+            (normalizedQuery == "photo" &&
+                currentMessage['photos'] != null &&
+                currentMessage['photos'].isNotEmpty &&
+                currentMessage['sender_name'] != "Tadeáš Fořt")) {
+          newSearchResults.add(i);
+        }
+      }
+
+      setState(() {
+        updateSearchResults(newSearchResults);
+        if (newSearchResults.isNotEmpty) {
+          updateCurrentSearchIndex(0);
+          updateIsSearchActive(true);
+          scrollToHighlightedMessage(newSearchResults[0]);
+        } else {
+          updateCurrentSearchIndex(-1);
+          updateIsSearchActive(false);
+          print("No messages with the given content found.");
+        }
+      });
     }
   });
 }
