@@ -60,4 +60,20 @@ class ApiService {
       throw Exception('Failed to upload photo');
     }
   }
+
+  static Future<List<dynamic>> fetchPhotos(String collectionName) async {
+    final url =
+        Uri.parse('$baseUrl/photos/${Uri.encodeComponent(collectionName)}');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load photos');
+    }
+  }
+
+  static String getPhotoUrl(String uri) {
+    final processedUri = uri.replaceFirst('messages/inbox/', '');
+    return '$baseUrl/inbox/$processedUri';
+  }
 }

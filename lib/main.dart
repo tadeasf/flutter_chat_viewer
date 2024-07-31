@@ -7,6 +7,8 @@ import 'dart:async';
 import 'components/message_list.dart';
 import 'components/api_service.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:flutter/material.dart';
+import 'components/photo_gallery.dart';
 
 void main() {
   runApp(const MyApp());
@@ -81,7 +83,8 @@ class _MessageSelectorState extends State<MessageSelector> {
   final ItemScrollController itemScrollController = ItemScrollController();
   final ItemPositionsListener itemPositionsListener =
       ItemPositionsListener.create();
-
+  List<dynamic> galleryPhotos = [];
+  bool isGalleryLoading = false;
   List<int> searchResults = [];
   int currentSearchIndex = -1;
   bool isSearchVisible = false;
@@ -135,6 +138,40 @@ class _MessageSelectorState extends State<MessageSelector> {
       print('Error fetching messages: $e');
       setState(() {
         isLoading = false;
+      });
+    }
+  }
+
+  Future<void> handleShowAllPhotos() async {
+    if (selectedCollection == null) return;
+
+    setState(() {
+      isGalleryLoading = true;
+    });
+
+    try {
+      final photoData = await ApiService.fetchPhotos(selectedCollection!);
+      final photoUrls = photoData
+          .expand((msg) => (msg['photos'] as List)
+              .map((photo) => ApiService.getPhotoUrl(photo['uri'])))
+          .toList();
+
+      setState(() {
+        galleryPhotos = photoUrls;
+        isGalleryLoading = false;
+      });
+
+      // Navigate to the PhotoGallery
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PhotoGallery(photos: galleryPhotos),
+        ),
+      );
+    } catch (error) {
+      print('Failed to fetch photo data: $error');
+      setState(() {
+        isGalleryLoading = false;
       });
     }
   }
@@ -340,6 +377,13 @@ class _MessageSelectorState extends State<MessageSelector> {
                   fontSize: 24,
                 ),
               ),
+            ),
+            ListTile(
+              title: const Text('Display All Images'),
+              onTap: () {
+                Navigator.pop(context);
+                handleShowAllPhotos();
+              },
             ),
             ListTile(
               title: Text(
