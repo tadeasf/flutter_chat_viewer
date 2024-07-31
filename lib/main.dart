@@ -1,3 +1,7 @@
+// TODO: implement cross-collection search
+// it should display all matched message (fuzzy)
+//and allow to open them in the original chat
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
