@@ -112,9 +112,9 @@ class AppDrawer extends StatelessWidget {
                   leading: const Icon(Icons.photo_library),
                   title: Text('Gallery',
                       style: Theme.of(context).textTheme.bodyMedium),
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(context);
-                    PhotoHandler.handleShowAllPhotos(
+                    await PhotoHandler.handleShowAllPhotos(
                       context,
                       selectedCollection,
                       setState,

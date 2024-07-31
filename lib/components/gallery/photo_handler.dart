@@ -44,9 +44,7 @@ class PhotoHandler {
       }
     } catch (error) {
       if (kDebugMode) {
-        if (kDebugMode) {
-          print('Failed to fetch photo data: $error');
-        }
+        print('Failed to fetch photo data: $error');
       }
       setState(() {
         isGalleryLoading = false;

@@ -1,6 +1,7 @@
 // components/photo_gallery.dart
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'photo_view_screen.dart';
 
 class PhotoGallery extends StatelessWidget {
@@ -16,9 +17,9 @@ class PhotoGallery extends StatelessWidget {
       ),
       body: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 4,
-          crossAxisSpacing: 4,
+          crossAxisCount: 3,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
         ),
         itemCount: photos.length,
         itemBuilder: (context, index) {
@@ -35,24 +36,14 @@ class PhotoGallery extends StatelessWidget {
             },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                photos[index],
+              child: CachedNetworkImage(
+                imageUrl: photos[index],
                 fit: BoxFit.cover,
-                loadingBuilder: (BuildContext context, Widget child,
-                    ImageChunkEvent? loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return const Text('Failed to load image');
-                },
+                placeholder: (context, url) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                errorWidget: (context, url, error) =>
+                    const Text('Failed to load image'),
               ),
             ),
           );

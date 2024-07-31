@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:permission_handler/permission_handler.dart'; // Add this import
+import 'package:permission_handler/permission_handler.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // Add this import
 import 'components/messages/message_selector.dart';
 import 'components/ui_utils/theme_manager.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -24,7 +25,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _requestPermissions(); // Request permissions
+    _requestPermissions();
     ThemeManager.loadThemeMode().then((mode) {
       setState(() {
         _themeMode = mode;
@@ -86,10 +87,8 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
   void initState() {
     super.initState();
     if (kDebugMode) {
-      if (kDebugMode) {
-        print('Collection Name: ${widget.collectionName}');
-      }
-    } // Debug print
+      print('Collection Name: ${widget.collectionName}');
+    }
     _loadCachedPhoto();
   }
 
@@ -114,7 +113,6 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
       final requestUrl =
           'https://backend.jevrej.cz/messages/${widget.collectionName}/photo';
       if (kDebugMode) {
-        if (kDebugMode) {}
         print('Request URL: $requestUrl');
       }
       final response = await http.get(
@@ -181,18 +179,17 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
           )
         else
           ClipOval(
-            child: Image.network(
-              _imageUrl ?? '',
+            child: CachedNetworkImage(
+              imageUrl: _imageUrl ?? '',
               width: widget.size,
               height: widget.size,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(
-                  Icons.account_circle,
-                  size: widget.size,
-                  color: Colors.grey,
-                );
-              },
+              placeholder: (context, url) => const CircularProgressIndicator(),
+              errorWidget: (context, url, error) => Icon(
+                Icons.account_circle,
+                size: widget.size,
+                color: Colors.grey,
+              ),
             ),
           ),
         if (widget.isOnline)
