@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../gallery/profile_photo.dart';
+import '../profile_photo/profile_photo.dart';
 
 class MessageProfilePhoto extends StatelessWidget {
   final String collectionName;

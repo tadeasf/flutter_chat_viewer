@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart'; // Add this import
 import 'components/messages/message_selector.dart';
-import 'components/ui/theme_manager.dart';
+import 'components/ui_utils/theme_manager.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 
 void main() {
@@ -23,11 +24,20 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    _requestPermissions(); // Request permissions
     ThemeManager.loadThemeMode().then((mode) {
       setState(() {
         _themeMode = mode;
       });
     });
+  }
+
+  Future<void> _requestPermissions() async {
+    if (await Permission.storage.request().isGranted) {
+      // Permission granted
+    } else {
+      // Handle the case when permission is not granted
+    }
   }
 
   void _setThemeMode(ThemeMode mode) {

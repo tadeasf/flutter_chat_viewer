@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'photo_handler.dart';
+import '../gallery/photo_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_photo_manager.dart';
 

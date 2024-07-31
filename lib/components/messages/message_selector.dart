@@ -8,11 +8,11 @@ import '../api_db/load_collections.dart';
 import 'fetch_messages.dart';
 import '../search/search_messages.dart';
 import '../gallery/photo_handler.dart';
-import '../ui/date_selector.dart';
-import '../ui/theme_manager.dart';
+import '../ui_utils/date_selector.dart';
+import '../ui_utils/theme_manager.dart';
 import 'message_list.dart';
-import '../gallery/profile_photo.dart'; // Import ProfilePhoto
-import '../gallery/profile_photo_manager.dart'; // Add this import
+import '../profile_photo/profile_photo.dart'; // Import ProfilePhoto
+import '../profile_photo/profile_photo_manager.dart'; // Add this import
 import '../api_db/database_manager.dart'; // Add this import
 import '../search/navigate_search.dart'; // Add this import
 

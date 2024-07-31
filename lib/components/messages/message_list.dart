@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'message_item.dart';
-import '../ui/custom_scroll_behavior.dart';
+import '../ui_utils/custom_scroll_behavior.dart';
 
 class MessageList extends StatelessWidget {
   final List<dynamic> messages;

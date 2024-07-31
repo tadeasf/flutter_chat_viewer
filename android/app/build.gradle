@@ -39,7 +39,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.tadeasfort.meta_chat_viewer"
+        applicationId "com.tadeasfort.flutter_chat_viewer"
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
