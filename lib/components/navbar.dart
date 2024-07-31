@@ -25,7 +25,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
           Scaffold.of(context).openDrawer();
         },
       ),
-      title: Text(title),
+      title: Text(title, style: const TextStyle(fontSize: 18)),
       actions: [
         IconButton(
           icon: Icon(isCollectionSelectorVisible
@@ -42,6 +42,7 @@ class Navbar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: onDatabasePressed,
         ),
       ],
+      elevation: 4.0, // Add shadow for a modern look
     );
   }
 

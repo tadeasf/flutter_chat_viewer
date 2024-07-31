@@ -94,4 +94,22 @@ class ApiService {
   static String getProfilePhotoUrl(String collectionName) {
     return '$baseUrl/serve/photo/${Uri.encodeComponent(collectionName)}';
   }
+
+  // Add this method to ApiService class
+  static Future<List<Map<String, dynamic>>> fetchCollectionsPaginated(
+      int page, int pageSize) async {
+    final response = await http
+        .get(Uri.parse('$baseUrl/collections?page=$page&pageSize=$pageSize'));
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(response.body);
+      return data
+          .map((item) => {
+                'name': item['name'].toString(),
+                'messageCount': item['messageCount'] as int,
+              })
+          .toList();
+    } else {
+      throw Exception('Failed to load collections');
+    }
+  }
 }

@@ -24,12 +24,47 @@ class CollectionSelectorState extends State<CollectionSelector> {
   late List<Map<String, dynamic>> collections;
   late List<Map<String, dynamic>> filteredCollections;
   final TextEditingController searchController = TextEditingController();
+  int currentPage = 1;
+  bool isLoadingMore = false;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     collections = widget.initialCollections;
     filteredCollections = widget.initialCollections;
+    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      _loadMoreCollections();
+    }
+  }
+
+  Future<void> _loadMoreCollections() async {
+    if (!isLoadingMore) {
+      setState(() {
+        isLoadingMore = true;
+      });
+
+      final newCollections = await loadMoreCollections(currentPage + 1, 20);
+
+      setState(() {
+        collections.addAll(newCollections);
+        filteredCollections = collections;
+        currentPage++;
+        isLoadingMore = false;
+      });
+    }
   }
 
   Future<void> refreshCollections() async {
@@ -50,6 +85,15 @@ class CollectionSelectorState extends State<CollectionSelector> {
     });
   }
 
+  String formatMessageCount(int count) {
+    if (count >= 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M';
+    } else if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}k';
+    }
+    return count.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -68,55 +112,122 @@ class CollectionSelectorState extends State<CollectionSelector> {
             }
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(4),
+              color: const Color(0xFF1E1E2E).withOpacity(0.8),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(widget.selectedCollection ?? 'Select a collection'),
-                Icon(isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down),
+                Text(
+                  widget.selectedCollection ?? 'Select a collection',
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                Icon(
+                  isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ],
             ),
           ),
         ),
         if (isOpen)
           Container(
-            margin: const EdgeInsets.only(top: 4),
+            margin: const EdgeInsets.only(top: 8),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(4),
+              color: const Color(0xFF1E1E2E).withOpacity(0.8),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: searchController,
-                    decoration: const InputDecoration(
-                      hintText: 'Search collections...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                  padding: const EdgeInsets.all(12.0),
+                  child: Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF302D41),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onChanged: filterCollections,
+                    child: TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search collections...',
+                        hintStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.7), fontSize: 16),
+                        prefixIcon: const Icon(Icons.search,
+                            color: Colors.white, size: 24),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 18),
+                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      onChanged: filterCollections,
+                    ),
                   ),
                 ),
                 SizedBox(
-                  height: 200,
-                  child: ListView(
-                    children: filteredCollections.map((item) {
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: filteredCollections.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == filteredCollections.length) {
+                        return isLoadingMore
+                            ? const Center(child: CircularProgressIndicator())
+                            : const SizedBox.shrink();
+                      }
+                      final item = filteredCollections[index];
                       final int messageCount = item['messageCount'] as int;
                       final double percentage =
                           messageCount / widget.maxMessageCount;
                       return ListTile(
-                        title: Text('${item['name']} ($messageCount messages)'),
-                        subtitle: LinearProgressIndicator(
-                          value: percentage,
-                          backgroundColor: Colors.grey[300],
-                          valueColor:
-                              const AlwaysStoppedAnimation<Color>(Colors.blue),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${item['name']}: ',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
+                            ),
+                            const Icon(Icons.message,
+                                color: Colors.white, size: 18),
+                            const SizedBox(width: 4),
+                            Text(
+                              formatMessageCount(messageCount),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: percentage,
+                            backgroundColor: Colors.grey[800],
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                Color(0xFFCBA6F7)),
+                            minHeight: 8,
+                          ),
                         ),
                         onTap: () {
                           widget.onCollectionChanged(item['name']);
@@ -125,7 +236,7 @@ class CollectionSelectorState extends State<CollectionSelector> {
                           });
                         },
                       );
-                    }).toList(),
+                    },
                   ),
                 ),
               ],
