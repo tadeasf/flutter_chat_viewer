@@ -30,7 +30,8 @@ class CrossCollectionSearchDialogState
     try {
       final encodedQuery = Uri.encodeComponent(_searchController.text);
       final response = await http.post(
-        Uri.parse('https://fastapi.tadeasfort.com/search'),
+        // Uri.parse('https://fastapi.tadeasfort.com/search'),
+        Uri.parse('https://backend.jevrej.cz/search'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'query': encodedQuery}),
       );
