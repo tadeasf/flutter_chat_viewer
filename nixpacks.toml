@@ -1,6 +1,5 @@
 [phases.setup]
-nixPkgs = ["flutter", "sudo"]
-cmds = ["adduser -D myuser", "chown -R myuser:myuser /app"]
+nixPkgs = ["flutter"]
 
 [phases.build]
-cmds = ["sudo -u myuser flutter pub get", "sudo -u myuser flutter build web --web-renderer html"]
+cmds = ["export FLUTTER_SUPPRESS_ANALYTICS=true", "flutter pub get", "flutter build web --web-renderer html"]
