@@ -1,8 +1,6 @@
 [phases.setup]
-nixPkgs = ["flutter"]
+nixPkgs = ["flutter", "sudo"]
+cmds = ["adduser -D myuser", "chown -R myuser:myuser /app"]
 
 [phases.build]
-cmds = ["flutter pub get", "flutter build web --web-renderer html"]
-
-[start]
-cmd = "npx serve -s build/web"
+cmds = ["sudo -u myuser flutter pub get", "sudo -u myuser flutter build web --web-renderer html"]
