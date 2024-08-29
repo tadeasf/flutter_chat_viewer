@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+buildCommand = "flutter pub get && flutter build web --web-renderer html"
+
+[deploy]
+startCommand = "npx serve -s build/web"
+healthcheckPath = "/"
+healthcheckTimeout = 100
