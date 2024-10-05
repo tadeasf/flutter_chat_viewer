@@ -144,19 +144,9 @@ class CollectionSelectorState extends State<CollectionSelector> {
           ),
         ),
         if (isOpen)
-          Container(
-            margin: const EdgeInsets.only(top: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E2E).withOpacity(0.8),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
+          SizedBox(
+            height:
+                200, // Set a fixed height or use MediaQuery to make it responsive
             child: ListView.builder(
               controller: _scrollController,
               itemCount: filteredCollections.length + 1,

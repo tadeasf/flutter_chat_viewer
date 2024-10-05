@@ -1,13 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import '../api_db/load_collections.dart';
 import 'fetch_messages.dart';
 import '../search/search_messages.dart';
 import '../gallery/photo_handler.dart';
 import 'message_list.dart';
+import '../api_db/api_service.dart';
 import '../profile_photo/profile_photo_manager.dart';
 import '../api_db/database_manager.dart';
 import '../search/navigate_search.dart';
@@ -387,5 +388,17 @@ class MessageSelectorState extends State<MessageSelector> {
         isCollectionSelectorVisible: isCollectionSelectorVisible,
       ),
     );
+  }
+
+  Future<void> loadCollections(
+      Function(List<Map<String, dynamic>>) callback) async {
+    try {
+      final loadedCollections = await ApiService.fetchCollections();
+      callback(loadedCollections);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading collections: $e');
+      }
+    }
   }
 }

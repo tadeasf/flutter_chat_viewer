@@ -20,7 +20,7 @@ class ApiService {
       return data
           .map((item) => {
                 'name': item['name'] as String,
-                'messageCount': item['messageCount'] as int,
+                'messageCount': item['messageCount'] as int? ?? 0,
               })
           .toList();
     } else {
