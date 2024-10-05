@@ -61,7 +61,7 @@ jobs:
     - name: Build APK
       run: |
         cd android
-        ./gradlew assembleRelease --stacktrace --info
+        ./gradlew assembleRelease --stacktrace
         cd ..
         flutter build apk --release --verbose
     
