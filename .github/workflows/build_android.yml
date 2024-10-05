@@ -30,6 +30,9 @@ jobs:
         echo "sdk.dir=$ANDROID_HOME" > android/local.properties
         echo "flutter.sdk=${{ env.FLUTTER_HOME }}" >> android/local.properties
     
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+    
     - name: Update Gradle Wrapper
       run: |
         cd android
@@ -62,9 +65,3 @@ jobs:
       with:
         name: release-apk
         path: build/app/outputs/flutter-apk/app-release.apk
-    
-    - name: List Android directory contents
-      run: |
-        cd android
-        ls -la
-        cd ..
