@@ -1,6 +1,5 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
@@ -70,13 +69,10 @@ class ApiService {
     }
   }
 
-  static Future<void> uploadPhoto(String collectionName, File imageFile) async {
+  static Future<void> uploadPhoto(
+      String collectionName, String base64Image) async {
     final url = Uri.parse(
         '$baseUrl/upload/photo/${Uri.encodeComponent(collectionName)}');
-
-    // Read the image file as bytes and encode to base64
-    final bytes = await imageFile.readAsBytes();
-    final base64Image = base64Encode(bytes);
 
     // Prepare the request body
     final body = jsonEncode({

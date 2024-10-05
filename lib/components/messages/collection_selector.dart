@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../api_db/load_collections.dart';
 import 'dart:math' show max;
+import '../api_db/load_collections.dart';
 
 class CollectionSelector extends StatefulWidget {
   final String? selectedCollection;
@@ -97,7 +97,9 @@ class CollectionSelectorState extends State<CollectionSelector> {
   @override
   Widget build(BuildContext context) {
     int maxMessageCount = filteredCollections.isNotEmpty
-        ? filteredCollections.map((c) => c['messageCount'] as int).reduce(max)
+        ? filteredCollections
+            .map((c) => c['messageCount'] as int)
+            .reduce((a, b) => max(a, b))
         : 1;
 
     return Column(
@@ -145,62 +147,106 @@ class CollectionSelectorState extends State<CollectionSelector> {
           ),
         ),
         if (isOpen)
-          SizedBox(
-            height:
-                200, // Set a fixed height or use MediaQuery to make it responsive
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: filteredCollections.length + 1,
-              itemBuilder: (context, index) {
-                if (index == filteredCollections.length) {
-                  return isLoadingMore
-                      ? const Center(child: CircularProgressIndicator())
-                      : const SizedBox.shrink();
-                }
-                final item = filteredCollections[index];
-                final int messageCount = item['messageCount'] as int;
-                return ListTile(
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${item['name']}: ',
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 16),
-                        ),
+          Container(
+            height: 300,
+            margin: const EdgeInsets.only(top: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E2E).withOpacity(0.8),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextField(
+                    controller: searchController,
+                    onChanged: filterCollections,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: 'Search collections...',
+                      hintStyle: TextStyle(color: Colors.white54),
+                      prefixIcon: Icon(Icons.search, color: Colors.white54),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
-                      const Icon(Icons.message, color: Colors.white, size: 18),
-                      const SizedBox(width: 4),
-                      Text(
-                        formatMessageCount(messageCount),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
-                    ],
-                  ),
-                  subtitle: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: maxMessageCount > 0
-                          ? messageCount / maxMessageCount
-                          : 0,
-                      backgroundColor: Colors.grey[800],
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFFCBA6F7)),
-                      minHeight: 8,
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      ),
                     ),
                   ),
-                  onTap: () {
-                    widget.onCollectionChanged(item['name']);
-                    setState(() {
-                      isOpen = false;
-                    });
-                  },
-                );
-              },
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: filteredCollections.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == filteredCollections.length) {
+                        return isLoadingMore
+                            ? const Center(child: CircularProgressIndicator())
+                            : const SizedBox.shrink();
+                      }
+                      final item = filteredCollections[index];
+                      final int messageCount = item['messageCount'] as int;
+                      final double percentage = maxMessageCount > 0
+                          ? messageCount / maxMessageCount
+                          : 0;
+                      return ListTile(
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${item['name']}: ',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
+                            ),
+                            const Icon(Icons.message,
+                                color: Colors.white, size: 18),
+                            const SizedBox(width: 4),
+                            Text(
+                              formatMessageCount(messageCount),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: percentage,
+                            backgroundColor: Colors.grey[800],
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                Color(0xFFCBA6F7)),
+                            minHeight: 8,
+                          ),
+                        ),
+                        onTap: () {
+                          widget.onCollectionChanged(item['name']);
+                          setState(() {
+                            isOpen = false;
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
       ],

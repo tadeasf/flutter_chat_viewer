@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../api_db/api_service.dart';
 import 'photo_gallery.dart';
+import 'dart:convert'; // Added for base64 encoding
 
 class PhotoHandler {
   static File? image; // Define the _image variable
@@ -67,7 +68,13 @@ class PhotoHandler {
     if (image == null || selectedCollection == null) return;
 
     try {
-      await ApiService.uploadPhoto(selectedCollection, image);
+      // Read the image file as bytes
+      List<int> imageBytes = await image.readAsBytes();
+      // Convert bytes to base64
+      String base64Image = base64Encode(imageBytes);
+
+      // Send the base64 encoded image
+      await ApiService.uploadPhoto(selectedCollection, base64Image);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Photo uploaded successfully')));

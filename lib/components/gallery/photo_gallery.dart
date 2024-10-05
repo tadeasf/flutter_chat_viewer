@@ -42,8 +42,10 @@ class PhotoGallery extends StatelessWidget {
                 placeholder: (context, url) => const Center(
                   child: CircularProgressIndicator(),
                 ),
-                errorWidget: (context, url, error) =>
-                    const Text('Failed to load image'),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.error, color: Colors.red),
+                ),
               ),
             ),
           );

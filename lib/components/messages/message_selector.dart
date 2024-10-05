@@ -53,7 +53,7 @@ class MessageSelectorState extends State<MessageSelector> {
   final bool _isProfilePhotoVisible = true;
   int get maxCollectionIndex => filteredCollections.isNotEmpty
       ? filteredCollections
-          .map((c) => c['index'] as int)
+          .map((c) => c['index'] as int? ?? 0)
           .reduce((a, b) => a > b ? a : b)
       : 0;
   bool isCollectionSelectorVisible = false;
@@ -194,13 +194,11 @@ class MessageSelectorState extends State<MessageSelector> {
   void _handleCrossCollectionSearch(List<dynamic> searchResults) {
     setState(() {
       crossCollectionMessages = searchResults.map((result) {
-        // Ensure all string fields are properly decoded
         return {
           ...result,
           'content': _decodeIfNeeded(result['content']),
           'sender_name': _decodeIfNeeded(result['sender_name']),
           'collectionName': _decodeIfNeeded(result['collectionName']),
-          // Add other fields that might need decoding
         };
       }).toList();
       isCrossCollectionSearch = true;
@@ -212,7 +210,7 @@ class MessageSelectorState extends State<MessageSelector> {
     try {
       return utf8.decode(text.runes.toList());
     } catch (e) {
-      return text; // Return original if decoding fails
+      return text;
     }
   }
 
@@ -225,16 +223,13 @@ class MessageSelectorState extends State<MessageSelector> {
       await _changeCollection(collectionName);
     }
 
-    // Reset cross-collection search state
     setState(() {
       isCrossCollectionSearch = false;
       crossCollectionMessages = [];
     });
 
-    // Wait for the messages to load
     await Future.delayed(const Duration(milliseconds: 500));
 
-    // Find the index of the message with the given timestamp
     final messageIndex =
         messages.indexWhere((message) => message['timestamp_ms'] == timestamp);
 
@@ -243,7 +238,7 @@ class MessageSelectorState extends State<MessageSelector> {
         index: messageIndex,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOutCubic,
-        alignment: 0.3, // Scroll to slightly above the middle of the viewport
+        alignment: 0.3,
       );
     }
 

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // Add this import
+import 'package:cached_network_image/cached_network_image.dart';
 import 'components/messages/message_selector.dart';
 import 'components/ui_utils/theme_manager.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -18,7 +18,6 @@ Future<void> main() async {
     if (kDebugMode) {
       print("Error loading .env file: $e");
     }
-    // Handle the error or set default values
   }
   runApp(const MyApp());
 }
@@ -47,11 +46,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _requestPermissions() async {
-    if (await Permission.storage.request().isGranted) {
-      // Permission granted
-    } else {
-      // Handle the case when permission is not granted
-    }
+    await Permission.storage.request();
   }
 
   void _setThemeMode(ThemeMode mode) {
@@ -68,7 +63,10 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       themeMode: _themeMode,
-      home: MessageSelector(setThemeMode: _setThemeMode, themeMode: _themeMode),
+      home: MessageSelector(
+        setThemeMode: _setThemeMode,
+        themeMode: _themeMode,
+      ),
     );
   }
 }
@@ -99,18 +97,12 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
   @override
   void initState() {
     super.initState();
-    if (kDebugMode) {
-      print('Collection Name: ${widget.collectionName}');
-    }
     _loadCachedPhoto();
   }
 
   Future<void> _loadCachedPhoto() async {
     final prefs = await SharedPreferences.getInstance();
     final cachedUrl = prefs.getString('profile_photo_${widget.collectionName}');
-    if (kDebugMode) {
-      print('Cached URL: $cachedUrl');
-    }
     if (cachedUrl != null) {
       setState(() {
         _imageUrl = cachedUrl;
@@ -129,12 +121,6 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
         Uri.parse(requestUrl),
         headers: {'X-API-KEY': dotenv.env['X_API_KEY'] ?? ''},
       );
-      if (kDebugMode) {
-        print('Response status: ${response.statusCode}');
-      }
-      if (kDebugMode) {
-        print('Response body: ${response.body}');
-      }
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['isPhotoAvailable'] == true && data['photoUrl'] != null) {
@@ -191,7 +177,7 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
         else
           ClipOval(
             child: CachedNetworkImage(
-              imageUrl: _imageUrl ?? '',
+              imageUrl: _imageUrl!,
               width: widget.size,
               height: widget.size,
               fit: BoxFit.cover,
@@ -228,15 +214,11 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.message),
-                  onPressed: () {
-                    // Handle message button press
-                  },
+                  onPressed: () {},
                 ),
                 IconButton(
                   icon: const Icon(Icons.call),
-                  onPressed: () {
-                    // Handle call button press
-                  },
+                  onPressed: () {},
                 ),
               ],
             ),
