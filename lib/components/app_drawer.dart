@@ -60,11 +60,18 @@ class AppDrawer extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: ProfilePhoto(
+                      key: ValueKey(profilePhotoUrl), // Add this line
                       collectionName: selectedCollection!,
                       size: 80.0,
                       isOnline: true,
                       profilePhotoUrl: profilePhotoUrl,
                       showButtons: true,
+                      onPhotoDeleted: () {
+                        // Add this callback
+                        setState(() {
+                          // Update the state to reflect the deleted photo
+                        });
+                      },
                     ),
                   ),
                 const SizedBox(height: 16),

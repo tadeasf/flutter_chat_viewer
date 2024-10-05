@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import '../gallery/photo_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_photo_manager.dart';
+import 'package:logging/logging.dart';
 
 class ProfilePhoto extends StatefulWidget {
   final String collectionName;
@@ -10,6 +10,7 @@ class ProfilePhoto extends StatefulWidget {
   final bool isOnline;
   final bool showButtons;
   final String? profilePhotoUrl;
+  final VoidCallback? onPhotoDeleted; // Add this callback
 
   const ProfilePhoto({
     super.key,
@@ -18,6 +19,7 @@ class ProfilePhoto extends StatefulWidget {
     this.isOnline = false,
     this.showButtons = true,
     this.profilePhotoUrl,
+    this.onPhotoDeleted, // Add this to the constructor
   });
 
   @override
@@ -25,6 +27,7 @@ class ProfilePhoto extends StatefulWidget {
 }
 
 class ProfilePhotoState extends State<ProfilePhoto> {
+  final Logger _logger = Logger('ProfilePhoto');
   String? _imageUrl;
   bool _isLoading = true;
   bool _isError = false;
@@ -46,9 +49,7 @@ class ProfilePhotoState extends State<ProfilePhoto> {
         });
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching profile photo: $e');
-      }
+      _logger.warning('Error fetching profile photo: $e');
       if (mounted) {
         setState(() {
           _isError = true;
@@ -82,17 +83,21 @@ class ProfilePhotoState extends State<ProfilePhoto> {
         }
       } else {
         // Delete photo
-        await PhotoHandler.deletePhoto(widget.collectionName, (newState) {
-          if (mounted) {
-            setState(newState);
-          }
-        });
+        await PhotoHandler.deletePhoto(
+          context,
+          widget.collectionName,
+          (newState) {
+            if (mounted) {
+              setState(newState);
+            }
+          },
+        );
+        ProfilePhotoManager.clearCache(widget.collectionName);
+        widget.onPhotoDeleted?.call();
       }
       _fetchProfilePhoto(); // Refresh the photo status
     } catch (e) {
-      if (kDebugMode) {
-        print('Error ${isUpload ? 'uploading' : 'deleting'} photo: $e');
-      }
+      _logger.warning('Error ${isUpload ? 'uploading' : 'deleting'} photo: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -144,9 +149,7 @@ class ProfilePhotoState extends State<ProfilePhoto> {
                     return const Center(child: CircularProgressIndicator());
                   },
                   errorBuilder: (context, error, stackTrace) {
-                    if (kDebugMode) {
-                      print('Error loading image: $error');
-                    } // Debug print
+                    _logger.warning('Error loading image: $error');
                     return Icon(
                       Icons.account_circle,
                       size: widget.size,

@@ -91,15 +91,32 @@ class PhotoHandler {
   }
 
   static Future<void> deletePhoto(
-      String collectionName, Function setState) async {
+      BuildContext context, String collectionName, Function setState) async {
     try {
-      await ApiService.deletePhoto(collectionName);
-      setState(() {
-        isPhotoAvailable = false;
-      });
+      final result = await ApiService.deletePhoto(collectionName);
+
+      if (result['success']) {
+        setState(() {
+          isPhotoAvailable = false;
+          imageUrl = null; // Clear the imageUrl
+        });
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'])),
+          );
+          // Notify the app that the photo has been deleted
+          Navigator.of(context).pop(true);
+        }
+      } else {
+        throw Exception(result['message']);
+      }
     } catch (e) {
       _logger.warning('Error deleting photo: $e');
-      throw Exception('Failed to delete photo');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting photo: ${e.toString()}')),
+        );
+      }
     }
   }
 }

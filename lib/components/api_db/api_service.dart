@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiService {
   static const String baseUrl = 'https://backend.jevrej.cz';
   static final String? apiKey = dotenv.env['X_API_KEY'];
+  static final Map<String, String> _profilePhotoUrls = {}; // Add this line
 
   static Map<String, String> get headers => {
         'Content-Type': 'application/json',
@@ -104,17 +105,49 @@ class ApiService {
     return '$baseUrl/inbox/${uri.replaceFirst('messages/inbox/', '')}';
   }
 
-  static Future<void> deletePhoto(String collectionName) async {
+  static Future<Map<String, dynamic>> deletePhoto(String collectionName) async {
     final url = Uri.parse(
         '$baseUrl/delete/photo/${Uri.encodeComponent(collectionName)}');
-    final response = await http.delete(url, headers: headers);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to delete photo');
+    final response = await http.delete(
+      url,
+      headers: headers,
+      body: '{}', // Send an empty JSON object as the body
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      // Clear the cached photo URL for this collection
+      _profilePhotoUrls.remove(collectionName);
+      return {
+        'success': true,
+        'message': data['message'],
+      };
+    } else {
+      String errorMessage;
+      try {
+        final errorData = json.decode(response.body);
+        errorMessage = errorData['message'] ?? 'Failed to delete photo';
+      } catch (e) {
+        errorMessage = 'Failed to delete photo: ${response.body}';
+      }
+      return {
+        'success': false,
+        'message': errorMessage,
+      };
     }
   }
 
   static String getProfilePhotoUrl(String collectionName) {
-    return '$baseUrl/serve/photo/${Uri.encodeComponent(collectionName)}';
+    // Check if we have a cached URL
+    if (_profilePhotoUrls.containsKey(collectionName)) {
+      return _profilePhotoUrls[collectionName]!;
+    }
+    // If not, generate a new URL with a timestamp to prevent caching
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final url =
+        '$baseUrl/serve/photo/${Uri.encodeComponent(collectionName)}?t=$timestamp';
+    _profilePhotoUrls[collectionName] = url;
+    return url;
   }
 
   // Update this method to match fetchCollections

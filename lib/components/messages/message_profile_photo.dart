@@ -18,6 +18,7 @@ class MessageProfilePhoto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ProfilePhoto(
+      key: ValueKey(profilePhotoUrl), // Add this line
       collectionName: collectionName,
       size: size,
       isOnline: isOnline,
