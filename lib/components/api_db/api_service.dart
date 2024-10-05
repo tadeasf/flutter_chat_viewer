@@ -1,8 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io'; // Add this import for File
-import 'package:http_parser/http_parser.dart'; // Add this import for MediaType
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Add this import for dotenv
+import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
   static const String baseUrl = 'https://backend.jevrej.cz';
