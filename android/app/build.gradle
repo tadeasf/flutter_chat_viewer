@@ -35,8 +35,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.example.flutter_chat_viewer"
-    compileSdkVersion 33
-    ndkVersion flutter.ndkVersion
+    compileSdk = 34  // Update this line
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -50,7 +49,7 @@ android {
     defaultConfig {
         applicationId "com.tadeasfort.flutter_chat_viewer"
         minSdkVersion flutter.minSdkVersion
-        targetSdkVersion 33
+        targetSdkVersion 34  // Also update this if it's not already set to 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
