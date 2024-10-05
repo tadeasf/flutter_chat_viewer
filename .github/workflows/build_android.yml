@@ -70,3 +70,9 @@ jobs:
       with:
         name: release-apk
         path: build/app/outputs/flutter-apk/app-release.apk
+
+    - name: Clean and Build APK
+      run: |
+        flutter clean
+        flutter pub get
+        flutter build apk --release --verbose
