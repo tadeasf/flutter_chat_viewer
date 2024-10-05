@@ -59,7 +59,11 @@ jobs:
         echo "YOUR_ENV_VARIABLE=value" > .env
     
     - name: Build APK
-      run: flutter build apk --release --verbose
+      run: |
+        cd android
+        ./gradlew assembleRelease --stacktrace --info
+        cd ..
+        flutter build apk --release --verbose
     
     - name: Upload APK
       uses: actions/upload-artifact@v3
