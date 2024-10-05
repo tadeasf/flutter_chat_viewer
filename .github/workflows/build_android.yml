@@ -34,11 +34,15 @@ jobs:
       run: |
         cd android
         gradle wrapper
-        ./gradlew wrapper --gradle-version 8.10.1
+        ./gradlew wrapper --gradle-version 8.7.0
         cd ..
     
     - name: Make gradlew executable
       run: chmod +x android/gradlew
+    
+    - name: Update Kotlin version
+      run: |
+        sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "2.0.20"/' android/build.gradle
     
     - name: Get dependencies
       run: flutter pub get
@@ -58,9 +62,18 @@ jobs:
       run: |
         echo "X_API_KEY=${{ secrets.X_API_KEY }}" > .env
     
-    - name: Build APK
+    - name: Update gradle.properties
       run: |
+        echo "org.gradle.jvmargs=-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
+        echo "android.useAndroidX=true" >> android/gradle.properties
+        echo "android.enableJetifier=true" >> android/gradle.properties
+    
+    - name: Clean and Build APK
+      run: |
+        flutter clean
+        flutter pub get
         cd android
+        ./gradlew clean
         ./gradlew assembleRelease --stacktrace
         cd ..
         flutter build apk --release --verbose
@@ -70,12 +83,3 @@ jobs:
       with:
         name: release-apk
         path: build/app/outputs/flutter-apk/app-release.apk
-
-    - name: Clean and Build APK
-      run: |
-        flutter clean
-        flutter pub get
-        cd android
-        ./gradlew clean
-        cd ..
-        flutter build apk --release --verbose
