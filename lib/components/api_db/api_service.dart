@@ -102,8 +102,8 @@ class ApiService {
     }
   }
 
-  static String getPhotoUrl(String uri) {
-    return '$baseUrl/serve/photo/$uri';
+  static String getPhotoUrl(String fullUri) {
+    return '$baseUrl/$fullUri';
   }
 
   static Future<void> deletePhoto(String collectionName) async {

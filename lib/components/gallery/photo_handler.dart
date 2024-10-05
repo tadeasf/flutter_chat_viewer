@@ -28,7 +28,7 @@ class PhotoHandler {
       final photoData = await ApiService.fetchPhotos(selectedCollection);
       final photoUrls = photoData
           .expand((msg) => (msg['photos'] as List)
-              .map((photo) => ApiService.getPhotoUrl(photo['uri'])))
+              .map((photo) => ApiService.getPhotoUrl(photo['fullUri'])))
           .toList();
 
       setState(() {
@@ -36,7 +36,6 @@ class PhotoHandler {
         isGalleryLoading = false;
       });
 
-      // Navigate to the PhotoGallery
       if (context.mounted) {
         Navigator.push(
           context,
