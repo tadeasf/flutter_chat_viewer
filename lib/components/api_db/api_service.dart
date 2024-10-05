@@ -20,7 +20,7 @@ class ApiService {
       return data
           .map((item) => {
                 'name': item['name'].toString(),
-                'messageCount': item['messageCount'] as int,
+                'index': item['index'] as int,
               })
           .toList();
     } else {
@@ -111,20 +111,8 @@ class ApiService {
     return '$baseUrl/serve/photo/${Uri.encodeComponent(collectionName)}';
   }
 
-  // Update this method to fetch all collections without pagination
+  // Update this method to match fetchCollections
   static Future<List<Map<String, dynamic>>> fetchCollectionsPaginated() async {
-    final response =
-        await http.get(Uri.parse('$baseUrl/collections'), headers: headers);
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      return data
-          .map((item) => {
-                'name': item['name'].toString(),
-                'messageCount': item['messageCount'] as int,
-              })
-          .toList();
-    } else {
-      throw Exception('Failed to load collections');
-    }
+    return fetchCollections(); // Since pagination is not implemented on the server side
   }
 }

@@ -50,11 +50,11 @@ class MessageSelectorState extends State<MessageSelector> {
   bool isSearchActive = false;
   String? profilePhotoUrl;
   final bool _isProfilePhotoVisible = true;
-  int get maxMessageCount => filteredCollections.isNotEmpty
+  int get maxCollectionIndex => filteredCollections.isNotEmpty
       ? filteredCollections
-          .map((c) => c['messageCount'] as int)
+          .map((c) => c['index'] as int)
           .reduce((a, b) => a > b ? a : b)
-      : 1;
+      : 0;
   bool isCollectionSelectorVisible = false;
   List<dynamic> crossCollectionMessages = [];
   bool isCrossCollectionSearch = false;
@@ -301,7 +301,7 @@ class MessageSelectorState extends State<MessageSelector> {
                 selectedCollection: selectedCollection,
                 initialCollections: filteredCollections,
                 onCollectionChanged: _changeCollection,
-                maxMessageCount: maxMessageCount,
+                maxIndex: maxCollectionIndex, // Changed from maxMessageCount
               ),
             ),
           if (isSearchVisible) ...[
