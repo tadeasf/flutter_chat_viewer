@@ -157,90 +157,57 @@ class CollectionSelectorState extends State<CollectionSelector> {
                 ),
               ],
             ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF302D41),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      controller: searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search collections...',
-                        hintStyle: TextStyle(
-                            color: Colors.white.withOpacity(0.7), fontSize: 16),
-                        prefixIcon: const Icon(Icons.search,
-                            color: Colors.white, size: 24),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 18),
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: filteredCollections.length + 1,
+              itemBuilder: (context, index) {
+                if (index == filteredCollections.length) {
+                  return isLoadingMore
+                      ? const Center(child: CircularProgressIndicator())
+                      : const SizedBox.shrink();
+                }
+                final item = filteredCollections[index];
+                final int messageCount = item['messageCount'] as int;
+                return ListTile(
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${item['name']}: ',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 16),
+                        ),
                       ),
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                      onChanged: filterCollections,
+                      const Icon(Icons.message, color: Colors.white, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        formatMessageCount(messageCount),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: messageCount / maxMessageCount,
+                      backgroundColor: Colors.grey[800],
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFFCBA6F7)),
+                      minHeight: 8,
                     ),
                   ),
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.5,
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: filteredCollections.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == filteredCollections.length) {
-                        return isLoadingMore
-                            ? const Center(child: CircularProgressIndicator())
-                            : const SizedBox.shrink();
-                      }
-                      final item = filteredCollections[index];
-                      final int messageCount = item['messageCount'] as int;
-                      return ListTile(
-                        title: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${item['name']}: ',
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                              ),
-                            ),
-                            const Icon(Icons.message,
-                                color: Colors.white, size: 18),
-                            const SizedBox(width: 4),
-                            Text(
-                              formatMessageCount(messageCount),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                        subtitle: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: messageCount / maxMessageCount,
-                            backgroundColor: Colors.grey[800],
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                                Color(0xFFCBA6F7)),
-                            minHeight: 8,
-                          ),
-                        ),
-                        onTap: () {
-                          widget.onCollectionChanged(item['name']);
-                          setState(() {
-                            isOpen = false;
-                          });
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
+                  onTap: () {
+                    widget.onCollectionChanged(item['name']);
+                    setState(() {
+                      isOpen = false;
+                    });
+                  },
+                );
+              },
             ),
           ),
       ],

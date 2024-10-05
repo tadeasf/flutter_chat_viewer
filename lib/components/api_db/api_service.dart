@@ -13,21 +13,16 @@ class ApiService {
       };
 
   static Future<List<Map<String, dynamic>>> fetchCollections() async {
-    final response = await http.get(Uri.parse('$baseUrl/collections'));
+    final response =
+        await http.get(Uri.parse('$baseUrl/collections'), headers: headers);
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
-      List<Map<String, dynamic>> collections = data
+      return data
           .map((item) => {
                 'name': item['name'] as String,
                 'messageCount': item['messageCount'] as int,
               })
           .toList();
-
-      // Sort collections by message count in descending order
-      collections
-          .sort((a, b) => b['messageCount'].compareTo(a['messageCount']));
-
-      return collections;
     } else {
       throw Exception('Failed to load collections');
     }
