@@ -76,6 +76,15 @@ android {
         checkReleaseBuilds false
         abortOnError false
     }
+
+    // This forces all Android dependencies to use the same Java version
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name.startsWith('kotlin-')) {
+                details.useVersion "1.8.0"
+            }
+        }
+    }
 }
 
 flutter {
