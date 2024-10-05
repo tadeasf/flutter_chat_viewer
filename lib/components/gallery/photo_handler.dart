@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../api_db/api_service.dart';
 import 'photo_gallery.dart';
-import 'dart:convert'; // Added for base64 encoding
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class PhotoHandler {
-  static File? image; // Define the _image variable
-  static bool isPhotoAvailable = false; // Define the isPhotoAvailable variable
+  static XFile? image;
+  static bool isPhotoAvailable = false;
+  static bool isUploading = false;
+  static String? imageUrl;
 
   static Future<void> handleShowAllPhotos(
       BuildContext context,
@@ -45,7 +47,7 @@ class PhotoHandler {
       }
     } catch (error) {
       if (kDebugMode) {
-        print('Failed to fetch photo data: $error');
+        print('Error fetching photos: $error');
       }
       setState(() {
         isGalleryLoading = false;
@@ -58,27 +60,48 @@ class PhotoHandler {
 
     setState(() {
       if (pickedFile != null) {
-        image = File(pickedFile.path);
+        image = pickedFile;
       }
     });
   }
 
-  static Future<void> uploadImage(BuildContext context, File? image,
+  static Future<void> uploadImage(BuildContext context, XFile? image,
       String? selectedCollection, Function setState) async {
     if (image == null || selectedCollection == null) return;
 
+    setState(() {
+      isUploading = true;
+    });
+
     try {
-      // Read the image file as bytes
+      // Read the file as bytes
       List<int> imageBytes = await image.readAsBytes();
-      // Convert bytes to base64
+      // Convert to base64
       String base64Image = base64Encode(imageBytes);
 
-      // Send the base64 encoded image
-      await ApiService.uploadPhoto(selectedCollection, base64Image);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Photo uploaded successfully')));
-        checkPhotoAvailability(selectedCollection, setState);
+      final response = await http.post(
+        Uri.parse('${ApiService.baseUrl}/upload/photo/$selectedCollection'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-KEY': ApiService.apiKey ?? '',
+        },
+        body: jsonEncode({
+          'photo': base64Image,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          isUploading = false;
+          imageUrl = '${ApiService.baseUrl}/serve/photo/$selectedCollection';
+        });
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Photo uploaded successfully')));
+          await checkPhotoAvailability(selectedCollection, setState);
+        }
+      } else {
+        throw Exception('Failed to upload image: ${response.statusCode}');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -88,6 +111,10 @@ class PhotoHandler {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Error uploading photo')));
       }
+    } finally {
+      setState(() {
+        isUploading = false;
+      });
     }
   }
 

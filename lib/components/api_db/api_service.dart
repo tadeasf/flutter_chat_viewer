@@ -74,20 +74,20 @@ class ApiService {
     final url = Uri.parse(
         '$baseUrl/upload/photo/${Uri.encodeComponent(collectionName)}');
 
-    // Prepare the request body
-    final body = jsonEncode({
-      'photo': base64Image,
-    });
-
-    // Send the POST request
     final response = await http.post(
       url,
-      headers: headers,
-      body: body,
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'photo': base64Image,
+      }),
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to upload photo: ${response.statusCode}');
+      throw Exception(
+          'Failed to upload photo: ${response.statusCode}\n${response.body}');
     }
   }
 
@@ -103,8 +103,7 @@ class ApiService {
   }
 
   static String getPhotoUrl(String uri) {
-    final processedUri = uri.replaceFirst('messages/inbox/', '');
-    return '$baseUrl/inbox/$processedUri';
+    return '$baseUrl/serve/photo/$uri';
   }
 
   static Future<void> deletePhoto(String collectionName) async {
