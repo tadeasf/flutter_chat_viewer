@@ -36,6 +36,7 @@ dependencies:
   path_provider: ^2.1.2
   sqflite: ^2.3.2
   flutter_dotenv: ^5.0.2
+  logging: ^1.1.0
 
 dev_dependencies:
   flutter_test:

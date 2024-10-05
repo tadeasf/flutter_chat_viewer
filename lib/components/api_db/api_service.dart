@@ -70,7 +70,7 @@ class ApiService {
   }
 
   static Future<void> uploadPhoto(
-      String collectionName, String base64Image) async {
+      String collectionName, Map<String, String> photoData) async {
     final url = Uri.parse(
         '$baseUrl/upload/photo/${Uri.encodeComponent(collectionName)}');
 
@@ -80,9 +80,7 @@ class ApiService {
         ...headers,
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'photo': base64Image,
-      }),
+      body: jsonEncode(photoData),
     );
 
     if (response.statusCode != 200) {
@@ -102,8 +100,8 @@ class ApiService {
     }
   }
 
-  static String getPhotoUrl(String fullUri) {
-    return '$baseUrl/$fullUri';
+  static String getPhotoUrl(String uri) {
+    return '$baseUrl/inbox/${uri.replaceFirst('messages/inbox/', '')}';
   }
 
   static Future<void> deletePhoto(String collectionName) async {

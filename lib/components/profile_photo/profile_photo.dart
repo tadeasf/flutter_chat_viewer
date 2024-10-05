@@ -36,33 +36,24 @@ class ProfilePhotoState extends State<ProfilePhoto> {
   }
 
   Future<void> _fetchProfilePhoto() async {
-    if (widget.profilePhotoUrl != null) {
+    try {
+      final url =
+          await ProfilePhotoManager.getProfilePhotoUrl(widget.collectionName);
       if (mounted) {
         setState(() {
-          _imageUrl = widget.profilePhotoUrl;
+          _imageUrl = url;
           _isLoading = false;
         });
       }
-    } else {
-      try {
-        final url =
-            await ProfilePhotoManager.getProfilePhotoUrl(widget.collectionName);
-        if (mounted) {
-          setState(() {
-            _imageUrl = url;
-            _isLoading = false;
-          });
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print('Error fetching profile photo: $e');
-        }
-        if (mounted) {
-          setState(() {
-            _isError = true;
-            _isLoading = false;
-          });
-        }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching profile photo: $e');
+      }
+      if (mounted) {
+        setState(() {
+          _isError = true;
+          _isLoading = false;
+        });
       }
     }
   }
