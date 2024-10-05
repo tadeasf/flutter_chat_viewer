@@ -25,6 +25,11 @@ jobs:
         flutter-version: '3.24.3'
         channel: 'stable'
     
+    - name: Create local.properties
+      run: |
+        echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+        echo "flutter.sdk=${{ env.FLUTTER_HOME }}" >> android/local.properties
+    
     - name: Generate Gradle Wrapper
       run: |
         cd android
@@ -34,7 +39,7 @@ jobs:
     - name: Update Gradle Wrapper
       run: |
         cd android
-        ./gradlew wrapper --gradle-version 7.6.1
+        ./gradlew wrapper --gradle-version 8.10.1
         cd ..
     
     - name: Get dependencies
