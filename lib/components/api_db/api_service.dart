@@ -20,7 +20,8 @@ class ApiService {
       return data
           .map((item) => {
                 'name': item['name'].toString(),
-                'index': int.tryParse(item['index'].toString()) ?? 0,
+                'index': item['index'] as int,
+                'messageCount': 0, // We'll update this later
               })
           .toList();
     } else {
@@ -39,21 +40,22 @@ class ApiService {
     }
     final response = await http.get(Uri.parse(url), headers: headers);
     if (response.statusCode == 200) {
-      var decodedResponse = json.decode(response.body);
-      if (decodedResponse is Map) {
-        // If it's a map, check if it has an error message
-        if (decodedResponse.containsKey('error')) {
-          throw Exception(decodedResponse['error']);
-        }
-        // If it's a map but not an error, return it as a single-item list
-        return [decodedResponse];
-      } else if (decodedResponse is List) {
-        return decodedResponse;
-      } else {
-        throw Exception('Unexpected response format');
-      }
+      return json.decode(response.body);
     } else {
       throw Exception('Failed to load messages');
+    }
+  }
+
+  static Future<int> fetchMessageCount(String collectionName) async {
+    final response = await http.get(
+        Uri.parse(
+            '$baseUrl/messages/${Uri.encodeComponent(collectionName)}/count'),
+        headers: headers);
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = json.decode(response.body);
+      return data['count'] as int;
+    } else {
+      throw Exception('Failed to load message count');
     }
   }
 

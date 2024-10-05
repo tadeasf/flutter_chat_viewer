@@ -4,14 +4,14 @@ import '../api_db/load_collections.dart';
 class CollectionSelector extends StatefulWidget {
   final String? selectedCollection;
   final Function(String?) onCollectionChanged;
-  final int maxIndex; // Changed from maxMessageCount
+  final int maxIndex;
   final List<Map<String, dynamic>> initialCollections;
 
   const CollectionSelector({
     super.key,
     required this.selectedCollection,
     required this.onCollectionChanged,
-    required this.maxIndex, // Changed from maxMessageCount
+    required this.maxIndex,
     required this.initialCollections,
   });
 
@@ -84,6 +84,15 @@ class CollectionSelectorState extends State<CollectionSelector> {
               collection['name'] != 'unified_collection')
           .toList();
     });
+  }
+
+  String formatMessageCount(int count) {
+    if (count >= 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M';
+    } else if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}k';
+    }
+    return count.toString();
   }
 
   @override
@@ -185,17 +194,38 @@ class CollectionSelectorState extends State<CollectionSelector> {
                             : const SizedBox.shrink();
                       }
                       final item = filteredCollections[index];
-                      final int collectionIndex = item['index'] as int;
                       return ListTile(
-                        title: Text(
-                          item['name'],
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 16),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${item['name']}: ',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
+                            ),
+                            const Icon(Icons.message,
+                                color: Colors.white, size: 18),
+                            const SizedBox(width: 4),
+                            Text(
+                              formatMessageCount(item['index'] as int),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
-                        subtitle: Text(
-                          'Index: $collectionIndex',
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 14),
+                        subtitle: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: (item['index'] as int) / widget.maxIndex,
+                            backgroundColor: Colors.grey[800],
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                Color(0xFFCBA6F7)),
+                            minHeight: 8,
+                          ),
                         ),
                         onTap: () {
                           widget.onCollectionChanged(item['name']);
