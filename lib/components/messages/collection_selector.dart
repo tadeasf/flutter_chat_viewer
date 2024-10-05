@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../api_db/load_collections.dart';
+import 'dart:math' show max;
 
 class CollectionSelector extends StatefulWidget {
   final String? selectedCollection;
@@ -96,7 +97,7 @@ class CollectionSelectorState extends State<CollectionSelector> {
   @override
   Widget build(BuildContext context) {
     int maxMessageCount = filteredCollections.isNotEmpty
-        ? filteredCollections.first['messageCount']
+        ? filteredCollections.map((c) => c['messageCount'] as int).reduce(max)
         : 1;
 
     return Column(
@@ -183,7 +184,9 @@ class CollectionSelectorState extends State<CollectionSelector> {
                   subtitle: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: LinearProgressIndicator(
-                      value: messageCount / maxMessageCount,
+                      value: maxMessageCount > 0
+                          ? messageCount / maxMessageCount
+                          : 0,
                       backgroundColor: Colors.grey[800],
                       valueColor: const AlwaysStoppedAnimation<Color>(
                           Color(0xFFCBA6F7)),
