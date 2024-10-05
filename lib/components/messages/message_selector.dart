@@ -340,7 +340,7 @@ class MessageSelectorState extends State<MessageSelector> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Image.network(
-                'https://secondary.dev.tadeasfort.com/serve/photo/${Uri.encodeComponent(selectedCollection!)}',
+                'https://backend.jevrej.cz/serve/photo/${Uri.encodeComponent(selectedCollection!)}',
                 height: 100,
                 errorBuilder: (context, error, stackTrace) {
                   return const Text('Failed to load image');

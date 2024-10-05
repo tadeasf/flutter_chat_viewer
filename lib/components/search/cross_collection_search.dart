@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CrossCollectionSearchDialog extends StatefulWidget {
   final Function(List<dynamic>) onSearchResults;
@@ -30,9 +31,11 @@ class CrossCollectionSearchDialogState
     try {
       final encodedQuery = Uri.encodeComponent(_searchController.text);
       final response = await http.post(
-        // Uri.parse('https://fastapi.tadeasfort.com/search'),
         Uri.parse('https://backend.jevrej.cz/search'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-KEY': dotenv.get('X_API_KEY', fallback: ''),
+        },
         body: json.encode({'query': encodedQuery}),
       );
 

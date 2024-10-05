@@ -7,8 +7,12 @@ import 'package:cached_network_image/cached_network_image.dart'; // Add this imp
 import 'components/messages/message_selector.dart';
 import 'components/ui_utils/theme_manager.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'dart:io' show Platform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
@@ -25,12 +29,14 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _requestPermissions();
     ThemeManager.loadThemeMode().then((mode) {
       setState(() {
         _themeMode = mode;
       });
     });
+    if (Platform.isAndroid) {
+      _requestPermissions();
+    }
   }
 
   Future<void> _requestPermissions() async {
@@ -112,11 +118,9 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
     try {
       final requestUrl =
           'https://backend.jevrej.cz/messages/${widget.collectionName}/photo';
-      if (kDebugMode) {
-        print('Request URL: $requestUrl');
-      }
       final response = await http.get(
         Uri.parse(requestUrl),
+        headers: {'X-API-KEY': dotenv.env['X_API_KEY'] ?? ''},
       );
       if (kDebugMode) {
         print('Response status: ${response.statusCode}');

@@ -2,12 +2,20 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io'; // Add this import for File
 import 'package:http_parser/http_parser.dart'; // Add this import for MediaType
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Add this import for dotenv
 
 class ApiService {
   static const String baseUrl = 'https://backend.jevrej.cz';
+  static final String? apiKey = dotenv.env['X_API_KEY'];
+
+  static Map<String, String> get headers => {
+        'Content-Type': 'application/json',
+        'X-API-KEY': apiKey ?? '',
+      };
 
   static Future<List<Map<String, dynamic>>> fetchCollections() async {
-    final response = await http.get(Uri.parse('$baseUrl/collections'));
+    final response =
+        await http.get(Uri.parse('$baseUrl/collections'), headers: headers);
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
       return data
@@ -30,7 +38,7 @@ class ApiService {
       if (toDate != null) queryParams.add('toDate=$toDate');
       url += '?${queryParams.join('&')}';
     }
-    final response = await http.get(Uri.parse(url));
+    final response = await http.get(Uri.parse(url), headers: headers);
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
@@ -41,7 +49,7 @@ class ApiService {
   static Future<bool> checkPhotoAvailability(String collectionName) async {
     final url = Uri.parse(
         '$baseUrl/messages/${Uri.encodeComponent(collectionName)}/photo');
-    final response = await http.get(url);
+    final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       return data['isPhotoAvailable'];
@@ -53,12 +61,13 @@ class ApiService {
   static Future<void> uploadPhoto(String collectionName, File imageFile) async {
     final url = Uri.parse(
         '$baseUrl/upload/photo/${Uri.encodeComponent(collectionName)}');
-    var request = http.MultipartRequest('POST', url);
-    request.files.add(await http.MultipartFile.fromPath(
-      'photo',
-      imageFile.path,
-      contentType: MediaType('image', 'jpeg'),
-    ));
+    var request = http.MultipartRequest('POST', url)
+      ..headers.addAll(headers)
+      ..files.add(await http.MultipartFile.fromPath(
+        'photo',
+        imageFile.path,
+        contentType: MediaType('image', 'jpeg'),
+      ));
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode != 200) {
@@ -69,7 +78,7 @@ class ApiService {
   static Future<List<dynamic>> fetchPhotos(String collectionName) async {
     final url =
         Uri.parse('$baseUrl/photos/${Uri.encodeComponent(collectionName)}');
-    final response = await http.get(url);
+    final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
@@ -85,7 +94,7 @@ class ApiService {
   static Future<void> deletePhoto(String collectionName) async {
     final url = Uri.parse(
         '$baseUrl/delete/photo/${Uri.encodeComponent(collectionName)}');
-    final response = await http.delete(url);
+    final response = await http.delete(url, headers: headers);
     if (response.statusCode != 200) {
       throw Exception('Failed to delete photo');
     }
@@ -97,7 +106,8 @@ class ApiService {
 
   // Update this method to fetch all collections without pagination
   static Future<List<Map<String, dynamic>>> fetchCollectionsPaginated() async {
-    final response = await http.get(Uri.parse('$baseUrl/collections'));
+    final response =
+        await http.get(Uri.parse('$baseUrl/collections'), headers: headers);
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
       return data
