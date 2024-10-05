@@ -34,63 +34,44 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.example.flutter_chat_viewer"
-    compileSdk = 34  // Update this line
+    namespace "com.tadeasfort.flutter_chat_viewer"
+    compileSdkVersion 35
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
-    }
+        jvmTarget = '17'
 
-    defaultConfig {
-        applicationId "com.tadeasfort.flutter_chat_viewer"
-        minSdkVersion flutter.minSdkVersion
-        targetSdkVersion 34  // Also update this if it's not already set to 34
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
-    }
-
-    signingConfigs {
-        release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-            storePassword keystoreProperties['storePassword']
-        }
-    }
-
-    buildTypes {
-        release {
-            signingConfig signingConfigs.release
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    lintOptions {
-        checkReleaseBuilds false
-        abortOnError false
-    }
-
-    // This forces all Android dependencies to use the same Java version
-    configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name.startsWith('kotlin-')) {
-                details.useVersion "1.8.0"
-            }
-        }
     }
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
-        release.java.srcDirs += 'src/release/kotlin'
+    }
+
+    defaultConfig {
+        applicationId "com.tadeasfort.flutter_chat_viewer"
+        minSdkVersion 34
+        targetSdkVersion 35
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+        }
     }
 }
 
 flutter {
     source '../..'
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.20"
 }
