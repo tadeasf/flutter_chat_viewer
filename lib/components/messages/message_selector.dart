@@ -96,7 +96,9 @@ class MessageSelectorState extends State<MessageSelector> {
 
   void setMessages(List<dynamic> loadedMessages) {
     setState(() {
-      messages = loadedMessages;
+      messages = loadedMessages
+          .expand((message) => message is List ? message : [message])
+          .toList();
     });
   }
 

@@ -20,7 +20,7 @@ class ApiService {
       return data
           .map((item) => {
                 'name': item['name'].toString(),
-                'index': item['index'] as int,
+                'index': int.tryParse(item['index'].toString()) ?? 0,
               })
           .toList();
     } else {
@@ -39,7 +39,19 @@ class ApiService {
     }
     final response = await http.get(Uri.parse(url), headers: headers);
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      var decodedResponse = json.decode(response.body);
+      if (decodedResponse is Map) {
+        // If it's a map, check if it has an error message
+        if (decodedResponse.containsKey('error')) {
+          throw Exception(decodedResponse['error']);
+        }
+        // If it's a map but not an error, return it as a single-item list
+        return [decodedResponse];
+      } else if (decodedResponse is List) {
+        return decodedResponse;
+      } else {
+        throw Exception('Unexpected response format');
+      }
     } else {
       throw Exception('Failed to load messages');
     }
