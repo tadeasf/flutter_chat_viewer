@@ -85,6 +85,11 @@ android {
             }
         }
     }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+        release.java.srcDirs += 'src/release/kotlin'
+    }
 }
 
 flutter {
