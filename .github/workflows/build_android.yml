@@ -34,7 +34,7 @@ jobs:
       run: |
         cd android
         gradle wrapper
-        ./gradlew wrapper --gradle-version 8.7.0
+        ./gradlew wrapper --gradle-version 8.10.1
         cd ..
     
     - name: Make gradlew executable
@@ -42,7 +42,7 @@ jobs:
     
     - name: Update Kotlin version
       run: |
-        sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "2.0.20"/' android/build.gradle
+        sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.10"/' android/build.gradle
     
     - name: Get dependencies
       run: flutter pub get
@@ -64,9 +64,10 @@ jobs:
     
     - name: Update gradle.properties
       run: |
-        echo "org.gradle.jvmargs=-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
+        echo "org.gradle.jvmargs=-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" > android/gradle.properties
         echo "android.useAndroidX=true" >> android/gradle.properties
         echo "android.enableJetifier=true" >> android/gradle.properties
+        echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
     
     - name: Clean and Build APK
       run: |
