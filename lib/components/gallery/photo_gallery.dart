@@ -1,21 +1,76 @@
-// components/photo_gallery.dart
-
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'photo_view_screen.dart';
 import '../api_db/api_service.dart';
+import 'dart:async';
+import 'package:logging/logging.dart';
 
-class PhotoGallery extends StatelessWidget {
-  final List<dynamic> photos;
-  final bool isLoading;
+class PhotoGallery extends StatefulWidget {
   final String collectionName;
 
   const PhotoGallery({
     super.key,
-    required this.photos,
-    required this.isLoading,
     required this.collectionName,
   });
+
+  @override
+  State<PhotoGallery> createState() => _PhotoGalleryState();
+}
+
+class _PhotoGalleryState extends State<PhotoGallery> {
+  final Logger _logger = Logger('PhotoGallery');
+  List<dynamic> photos = [];
+  bool isLoading = true;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPhotos();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchPhotos() async {
+    try {
+      final fetchedPhotos = await ApiService.fetchPhotos(widget.collectionName);
+      setState(() {
+        photos = fetchedPhotos;
+        isLoading = false;
+      });
+
+      if (photos.isEmpty) {
+        // If photos are empty, start periodic checks
+        _startPeriodicChecks();
+      }
+    } catch (e) {
+      _logger.warning('Error fetching photos: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _startPeriodicChecks() {
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      try {
+        final fetchedPhotos =
+            await ApiService.fetchPhotos(widget.collectionName);
+        if (fetchedPhotos.isNotEmpty) {
+          setState(() {
+            photos = fetchedPhotos;
+          });
+          _timer?.cancel(); // Stop checking once we have photos
+        }
+      } catch (e) {
+        _logger.warning('Error during periodic check: $e');
+      }
+    });
+  }
 
   String _getPhotoUrl(dynamic photo) {
     if (photo is Map<String, dynamic> && photo.containsKey('photos')) {

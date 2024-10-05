@@ -12,51 +12,16 @@ class PhotoHandler {
   static bool isUploading = false;
   static String? imageUrl;
 
-  static Future<void> handleShowAllPhotos(
-      BuildContext context,
-      String? selectedCollection,
-      Function setState,
-      List<dynamic> galleryPhotos,
-      bool isGalleryLoading) async {
+  static void handleShowAllPhotos(
+      BuildContext context, String? selectedCollection) {
     if (selectedCollection == null) return;
 
-    // Immediately open the gallery with a loading skeleton
-    if (context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PhotoGallery(
-            photos: [],
-            isLoading: true,
-            collectionName: selectedCollection,
-          ),
-        ),
-      );
-    }
-
-    try {
-      final photoData = await ApiService.fetchPhotos(selectedCollection);
-
-      if (context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PhotoGallery(
-              photos: photoData,
-              isLoading: false,
-              collectionName: selectedCollection,
-            ),
-          ),
-        );
-      }
-    } catch (error) {
-      _logger.warning('Error fetching photos: $error');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load photos')),
-        );
-      }
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PhotoGallery(collectionName: selectedCollection),
+      ),
+    );
   }
 
   static Future<void> getImage(ImagePicker picker, Function setState) async {
