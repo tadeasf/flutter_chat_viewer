@@ -30,10 +30,6 @@ jobs:
         echo "sdk.dir=$ANDROID_HOME" > android/local.properties
         echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
     
-    - name: Update Flutter SDK path in settings.gradle
-      run: |
-        sed -i "s|flutterSdkPath = .*|flutterSdkPath = '$FLUTTER_ROOT'|g" android/settings.gradle
-    
     - name: Set up Gradle Wrapper
       run: |
         cd android
