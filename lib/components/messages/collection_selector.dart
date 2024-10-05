@@ -4,14 +4,12 @@ import '../api_db/load_collections.dart';
 class CollectionSelector extends StatefulWidget {
   final String? selectedCollection;
   final Function(String?) onCollectionChanged;
-  final int maxIndex;
   final List<Map<String, dynamic>> initialCollections;
 
   const CollectionSelector({
     super.key,
     required this.selectedCollection,
     required this.onCollectionChanged,
-    required this.maxIndex,
     required this.initialCollections,
   });
 
@@ -97,6 +95,10 @@ class CollectionSelectorState extends State<CollectionSelector> {
 
   @override
   Widget build(BuildContext context) {
+    int maxMessageCount = filteredCollections.isNotEmpty
+        ? filteredCollections.first['messageCount']
+        : 1;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -194,6 +196,7 @@ class CollectionSelectorState extends State<CollectionSelector> {
                             : const SizedBox.shrink();
                       }
                       final item = filteredCollections[index];
+                      final int messageCount = item['messageCount'] as int;
                       return ListTile(
                         title: Row(
                           children: [
@@ -208,7 +211,7 @@ class CollectionSelectorState extends State<CollectionSelector> {
                                 color: Colors.white, size: 18),
                             const SizedBox(width: 4),
                             Text(
-                              formatMessageCount(item['index'] as int),
+                              formatMessageCount(messageCount),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -220,7 +223,7 @@ class CollectionSelectorState extends State<CollectionSelector> {
                         subtitle: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: LinearProgressIndicator(
-                            value: (item['index'] as int) / widget.maxIndex,
+                            value: messageCount / maxMessageCount,
                             backgroundColor: Colors.grey[800],
                             valueColor: const AlwaysStoppedAnimation<Color>(
                                 Color(0xFFCBA6F7)),

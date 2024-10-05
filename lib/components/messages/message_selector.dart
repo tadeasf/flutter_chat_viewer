@@ -303,7 +303,6 @@ class MessageSelectorState extends State<MessageSelector> {
                 selectedCollection: selectedCollection,
                 initialCollections: filteredCollections,
                 onCollectionChanged: _changeCollection,
-                maxIndex: maxCollectionIndex,
               ),
             ),
           if (isSearchVisible) ...[
