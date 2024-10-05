@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'load_collections.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'api_service.dart';
+import 'dart:convert';
 
 class DatabaseManager extends StatefulWidget {
   final VoidCallback refreshCollections;
@@ -25,20 +24,17 @@ class DatabaseManagerState extends State<DatabaseManager> {
 
   Future<void> fetchCurrentDb() async {
     try {
-      final response = await http.get(
-        Uri.parse('https://backend.jevrej.cz/current_db'),
-        headers: {'X-API-KEY': dotenv.env['X_API_KEY'] ?? ''},
-      );
+      final response = await ApiService.get('/current-db');
       if (response.statusCode == 200) {
         setState(() {
-          currentDb = response.body;
+          currentDb = json.decode(response.body)['current_db'];
         });
       } else {
-        throw Exception('Failed to load current database');
+        throw Exception('Failed to load current DB');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error fetching current database: $e');
+        print('Error fetching current DB: $e');
       }
     }
   }
@@ -48,24 +44,16 @@ class DatabaseManagerState extends State<DatabaseManager> {
       isLoading = true;
     });
     try {
-      final response = await http.get(
-        Uri.parse('https://backend.jevrej.cz/switch_db'),
-        headers: {'X-API-KEY': dotenv.env['X_API_KEY'] ?? ''},
-      );
+      final response = await ApiService.post('/switch-db');
       if (response.statusCode == 200) {
-        await Future.delayed(
-            const Duration(seconds: 30)); // Wait for 30 seconds
         await fetchCurrentDb();
-        await loadCollections((collections) {
-          // Update collections in the parent widget
-          widget.refreshCollections();
-        });
+        widget.refreshCollections();
       } else {
-        throw Exception('Failed to switch database');
+        throw Exception('Failed to switch DB');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error switching database: $e');
+        print('Error switching DB: $e');
       }
     } finally {
       setState(() {

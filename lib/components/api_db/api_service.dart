@@ -5,12 +5,21 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiService {
   static const String baseUrl = 'https://backend.jevrej.cz';
   static final String? apiKey = dotenv.env['X_API_KEY'];
-  static final Map<String, String> _profilePhotoUrls = {}; // Add this line
+  static final Map<String, String> _profilePhotoUrls = {};
 
   static Map<String, String> get headers => {
         'Content-Type': 'application/json',
         'X-API-KEY': apiKey ?? '',
       };
+
+  static Future<http.Response> get(String endpoint) async {
+    return await http.get(Uri.parse('$baseUrl$endpoint'), headers: headers);
+  }
+
+  static Future<http.Response> post(String endpoint, {Object? body}) async {
+    return await http.post(Uri.parse('$baseUrl$endpoint'),
+        headers: headers, body: jsonEncode(body));
+  }
 
   static Future<List<Map<String, dynamic>>> fetchCollections() async {
     final response =
