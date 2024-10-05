@@ -63,3 +63,9 @@ jobs:
       with:
         name: release-apk
         path: build/app/outputs/flutter-apk/app-release.apk
+    
+    - name: List Android directory contents
+      run: |
+        cd android
+        ls -la
+        cd ..
