@@ -28,12 +28,11 @@ jobs:
     - name: Create local.properties
       run: |
         echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-        echo "flutter.sdk=$(which flutter | xargs dirname | xargs dirname)" >> android/local.properties
+        echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
     
     - name: Update Flutter SDK path in settings.gradle
       run: |
-        FLUTTER_SDK=$(which flutter | xargs dirname | xargs dirname)
-        sed -i "s|/packages/flutter_tools/gradle|$FLUTTER_SDK/packages/flutter_tools/gradle|g" android/settings.gradle
+        sed -i "s|flutterSdkPath = .*|flutterSdkPath = '$FLUTTER_ROOT'|g" android/settings.gradle
     
     - name: Set up Gradle Wrapper
       run: |
