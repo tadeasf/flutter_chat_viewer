@@ -30,12 +30,6 @@ jobs:
         echo "sdk.dir=$ANDROID_HOME" > android/local.properties
         echo "flutter.sdk=${{ env.FLUTTER_HOME }}" >> android/local.properties
     
-    - name: Generate Gradle Wrapper
-      run: |
-        cd android
-        gradle wrapper
-        cd ..
-    
     - name: Update Gradle Wrapper
       run: |
         cd android
