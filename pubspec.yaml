@@ -58,6 +58,8 @@ flutter:
           weight: 700
           style: italic
 
+  assets:
+    - .env
 
 flutter_launcher_icons:
   android: true

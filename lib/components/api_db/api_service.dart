@@ -61,17 +61,25 @@ class ApiService {
   static Future<void> uploadPhoto(String collectionName, File imageFile) async {
     final url = Uri.parse(
         '$baseUrl/upload/photo/${Uri.encodeComponent(collectionName)}');
-    var request = http.MultipartRequest('POST', url)
-      ..headers.addAll(headers)
-      ..files.add(await http.MultipartFile.fromPath(
-        'photo',
-        imageFile.path,
-        contentType: MediaType('image', 'jpeg'),
-      ));
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
+
+    // Read the image file as bytes and encode to base64
+    final bytes = await imageFile.readAsBytes();
+    final base64Image = base64Encode(bytes);
+
+    // Prepare the request body
+    final body = jsonEncode({
+      'photo': base64Image,
+    });
+
+    // Send the POST request
+    final response = await http.post(
+      url,
+      headers: headers,
+      body: body,
+    );
+
     if (response.statusCode != 200) {
-      throw Exception('Failed to upload photo');
+      throw Exception('Failed to upload photo: ${response.statusCode}');
     }
   }
 
