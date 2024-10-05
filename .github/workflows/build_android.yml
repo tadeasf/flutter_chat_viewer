@@ -25,6 +25,12 @@ jobs:
         flutter-version: '3.24.3'
         channel: 'stable'
     
+    - name: Generate Gradle Wrapper
+      run: |
+        cd android
+        gradle wrapper
+        cd ..
+    
     - name: Update Gradle Wrapper
       run: |
         cd android
